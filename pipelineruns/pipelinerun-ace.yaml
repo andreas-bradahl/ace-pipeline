@@ -1,0 +1,11 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: foo-run
+spec:
+  pipelineRef:
+    name: foo
+  resources:
+    - name: source
+      resourceRef:
+        name: skaffold-source
