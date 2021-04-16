@@ -51,3 +51,5 @@ spec:
       params:
         - name: IMAGE
           value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(context.pipelineRun.name)
+        - name: TLSVERIFY
+          value: 'false'
