@@ -1,0 +1,16 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: display-tree
+spec:
+  workspaces:
+    - name: git-source
+  steps:
+  - name: run-tree-command
+    image: ubuntu
+    script: |
+      #!/usr/bin/env bash
+      printf "Listing 'git-source/source'\n"
+      ls git-source/source
+      printf "\nDisplaying Dockerfile\n"
+      cat git-source/Dockerfile

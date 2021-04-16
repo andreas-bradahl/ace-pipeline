@@ -1,11 +1,21 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: foo-run
+  name: pipelinerun-ace
 spec:
   pipelineRef:
-    name: foo
-  resources:
-    - name: source
-      resourceRef:
-        name: skaffold-source
+    name: pipeline-ace
+  workspaces:
+    - name: shared-data
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+  params:
+    - name: repo-url
+      value: https://github.com/andreas-bradahl/ping-service-demo-app.git
+    - name: branch-name
+      value: main

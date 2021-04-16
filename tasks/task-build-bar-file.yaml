@@ -1,0 +1,27 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: task-build-bar
+spec:
+  params:
+    - name: DOCKERFILE
+      type: string
+      description: Location of Dockerfile to build.
+      default: ./Dockerfile
+    - name: BUILDER_IMAGE
+      type: string
+      description: Location of the buildah builder image.
+      default: registry.redhat.io/rhel8/buildah
+    - name: TLSVERIFY
+      default: 'false'
+      description: Verify the TLS on the registry endpoint
+      type: string
+    - name: namespace
+      default: ace
+      description: namespace used to build the image url
+  steps:
+    - name: build-sources
+      image: ubuntu
+      command:
+        - /bin/bash
+      args: ['-c', 'echo hello world']
