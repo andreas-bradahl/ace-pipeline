@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: pipelinerun-ace
+  name: pingservice-pr-ace
 spec:
   pipelineRef:
     name: pipeline-ace
@@ -17,5 +17,5 @@ spec:
   params:
     - name: repo-url
       value: https://github.com/andreas-bradahl/ping-service-demo-app.git
-    - name: branch-name
-      value: main
+    - name: registry-url
+      value: image-registry.openshift-image-registry.svc:5000

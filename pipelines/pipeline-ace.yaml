@@ -13,12 +13,16 @@ spec:
   - name: branch-name
     type: string
     description: The git branch to clone.
+  - name: registry-url
+    type: string
+    description: The hostname of the image registry to be used
   workspaces:
   - name: shared-data
     description: |
       This workspace will receive the cloned git repo and be passed
       to the next Task for the commit to be checked.
   tasks:
+    # Task 1: Clone git repository to workspace
     - name: fetch-repo
       taskRef:
         name: git-clone
@@ -29,17 +33,9 @@ spec:
       params:
       - name: url
         value: $(params.repo-url)
-      - name: revision
-        value: $(params.branch-name)
-    # - name: show-tree
-    #   taskRef:
-    #     name: display-tree
-    #   workspaces:
-    #     - name: git-source
-    #       workspace: shared-data
-    #   runAfter:
-    #     - fetch-repo
-    - name: build-image
+    # Task 2: Run code level tests, continuous inspection etc.
+    # Task 3: Build ACE image and push to OCP registry
+    - name: build-ace-image
       taskRef:
         name: buildah
         kind: ClusterTask
@@ -50,6 +46,16 @@ spec:
           workspace: shared-data
       params:
         - name: IMAGE
-          value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(context.pipelineRun.name)
+          value: $(params.registry-url)/$(context.pipelineRun.namespace)/$(context.pipelineRun.name)
         - name: TLSVERIFY
           value: 'false'
+    # Task 4: Create and deploy IntegrationServer manifest
+    - name: deploy-integration-server
+      taskRef:
+        name: create-and-deploy-integration-server
+      runAfter:
+        - build-ace-image
+      params:
+        - name: IMAGE
+          value: $(params.registry-url)/$(context.pipelineRun.namespace)/$(context.pipelineRun.name)
+ 

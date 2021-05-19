@@ -1,0 +1,35 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: pingservice-triggertemplate
+spec:
+  params:
+  - name: git-revision
+    description: The git revision
+    default: main
+  - name: git-repo-url
+    description: The git repository url
+  - name: git-repo-name
+    description: The git repository name
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: pingservice-pipeline-run-
+    spec:
+      pipelineRef:
+        name: pipeline-ace
+      params:
+      - name: repo-url
+        value: $(tt.params.git-repo-url)
+      - name: branch-name
+        value: $(tt.params.branch-name)
+      workspaces:
+        - name: shared-data
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
