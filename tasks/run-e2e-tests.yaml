@@ -1,0 +1,13 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: run-e2e-tests
+spec:
+  steps:
+    - name: run-soapui-tests
+      image: docker
+      script: |
+        docker run -d -p 3000:3000 ddavison/soapui
+        curl --form "project=@/workspace/source/tests/vote-api-test-project.xml" http://localhost:3000
+
+
