@@ -5,8 +5,7 @@ metadata:
 spec:
   steps:
     - name: run-soapui-tests
-      image: docker
+      image: docker:dind
       script: |
-        docker run -v /var/run/docker.sock:/var/run/docker.sock -it docker
         docker run -d -p 3000:3000 ddavison/soapui
         curl --form "project=@/workspace/source/tests/vote-api-test-project.xml" http://localhost:3000
