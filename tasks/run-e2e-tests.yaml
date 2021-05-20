@@ -5,8 +5,8 @@ metadata:
 spec:
   steps:
     - name: run-soapui-tests
-      image: centos
+      image: docker
       script: |
-        yum -y install podman
-        podman run -d -p 3000:3000 ddavison/soapui
+        docker run -v /var/run/docker.sock:/var/run/docker.sock -it docker
+        docker run -d -p 3000:3000 ddavison/soapui
         curl --form "project=@/workspace/source/tests/vote-api-test-project.xml" http://localhost:3000
