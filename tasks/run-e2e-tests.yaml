@@ -8,4 +8,5 @@ spec:
       image: docker:dind
       script: |
         docker run -d -p 3000:3000 ddavison/soapui
+        apk add curl
         curl --form "project=@/workspace/source/tests/vote-api-test-project.xml" http://localhost:3000
