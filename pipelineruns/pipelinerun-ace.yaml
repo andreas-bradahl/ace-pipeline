@@ -13,9 +13,15 @@ spec:
             - ReadWriteOnce
           resources:
             requests:
-              storage: 1Gi
+              storage: 500Mi
   params:
     - name: repo-url
       value: https://github.com/andreas-bradahl/ping-service-demo-app.git
     - name: registry-url
       value: image-registry.openshift-image-registry.svc:5000
+    - name: release_name
+      value: pingservice-release
+    - name: namespace
+      value: cicd-experimental
+    - name: generated_name
+      value: pingservice-gen-name
