@@ -1,19 +1,19 @@
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: EventListener
 metadata:
-  name: pingservice-eventlistener
+  name: ace-github-eventlistener
 spec:
   serviceAccountName: pipeline
   triggers:
-    - name: pingservice-trigger
+    - name: ace-github-trigger
       interceptors:
         - github:
             secretRef:
-              secretName: pingservice-gh-secret
+              secretName: ace-github-secret
               # secretKey: secretToken
             eventTypes:
               - push
       bindings:
-        - ref: pingservice-triggerbinding
+        - ref: ace-github-binding
       template:
-        name: pingservice-triggertemplate
+        name: ace-github-template

@@ -10,9 +10,6 @@ spec:
   - name: repo-url
     type: string
     description: The git repository URL to clone from.
-  - name: registry-hostname
-    type: string
-    description: The hostname of the image registry to be used
   - name: release-name
     type: string
     description: The release name of the application
@@ -46,7 +43,7 @@ spec:
           workspace: shared-data
       params:
         - name: IMAGE
-          value: $(params.registry-hostname)/$(context.pipelineRun.namespace)/$(params.release-name)-imagestream
+          value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.release-name)-imagestream
         - name: TLSVERIFY
           value: 'false'
     # Task 4: Create and deploy IntegrationServer manifest
