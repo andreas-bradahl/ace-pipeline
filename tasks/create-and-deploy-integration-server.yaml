@@ -19,7 +19,7 @@ spec:
         apiVersion: appconnect.ibm.com/v1beta1
         kind: IntegrationServer
         metadata:
-          name: $(params.release-name)-release
+          name: $(params.release-name)
           namespace: $(params.namespace)
         spec:
           license:
