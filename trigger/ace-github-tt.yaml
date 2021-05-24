@@ -16,9 +16,9 @@ spec:
         name: pipeline-ace
       params:
       - name: repo-url
-        value: $(params.git-repo-url)
+        value: $(tt.params.git-repo-url)
       - name: release-name
-        value: $(params.git-repo-name)
+        value: $(tt.params.git-repo-name)
       workspaces:
         - name: shared-data
           volumeClaimTemplate:

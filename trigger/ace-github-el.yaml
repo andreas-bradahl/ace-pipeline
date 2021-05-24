@@ -8,9 +8,9 @@ spec:
     - name: ace-github-trigger
       interceptors:
         - github:
-            secretRef:
-              secretName: ace-github-secret
-              # secretKey: secretToken
+            # secretRef:
+            #   secretName: ace-github-secret
+            #   # secretKey: secretToken
             eventTypes:
               - push
       bindings:
