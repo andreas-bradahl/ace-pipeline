@@ -9,4 +9,4 @@ spec:
       script: |
         docker run -d -p 3000:3000 ddavison/soapui
         apk add curl
-        curl --form "project=@/workspace/source/tests/vote-api-test-project.xml" http://localhost:3000
+        curl --form "project=@/workspace/source/tests/petstore-tests-soapui-project.xml" http://localhost:3000
