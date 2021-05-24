@@ -7,7 +7,6 @@ spec:
     git:
       uri: https://github.com/andreas-bradahl/ping-service-demo-app.git
       ref: main
-    # contextDir: "source/PingService"
     dockerfile: |
       FROM ibmcom/ace-server:latest
       COPY source/PingService /home/aceuser/PingService

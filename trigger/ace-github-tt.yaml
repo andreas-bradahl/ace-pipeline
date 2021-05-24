@@ -10,7 +10,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      generateName: pingservice-github-event-
+      generateName: $(params.git-repo-name)-github-event-
     spec:
       pipelineRef:
         name: pipeline-ace
