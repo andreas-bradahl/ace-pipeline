@@ -5,8 +5,9 @@ metadata:
 spec:
   steps:
     - name: run-soapui-tests
-      image: docker:dind
+      image: openjdk:11
       script: |
-        docker run -d -p 3000:3000 ddavison/soapui
-        apk add curl
-        curl --form "project=@/workspace/source/tests/petstore-tests-soapui-project.xml" http://localhost:3000
+        curl https://s3.amazonaws.com/downloads.eviware/soapuios/5.6.0/SoapUI-5.6.0-linux-bin.tar.gz --output SoapUI-5.6.0-linux-bin.tar.gz
+        tar -xzf SoapUI-5.6.0-linux-bin.tar.gz -C /opt/
+        rm /opt/SoapUI-5.6.0/lib/xmlbeans-xmlpublic-2.6.0.jar
+        /opt/SoapUI-5.6.0/bin/testrunner.sh -r /workspace/source/tests/petstore-tests-soapui-project.xml
