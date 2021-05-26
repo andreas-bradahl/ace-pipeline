@@ -6,6 +6,7 @@ spec:
   params:
   - name: git-repo-url
   - name: git-repo-name
+  - name: git-commit-id
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
@@ -19,6 +20,8 @@ spec:
         value: $(tt.params.git-repo-url)
       - name: release-name
         value: $(tt.params.git-repo-name)
+      - name: commit-id
+        value: $(tt.params.git-commit-id)
       workspaces:
         - name: shared-data
           volumeClaimTemplate:

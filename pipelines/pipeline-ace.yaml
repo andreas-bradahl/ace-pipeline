@@ -13,6 +13,9 @@ spec:
   - name: release-name
     type: string
     description: The release name of the application
+  - name: commit-id
+    type: string
+    description: The commit hash identifier for the current HEAD commit
   workspaces:
   - name: shared-data
     description: |
@@ -43,24 +46,43 @@ spec:
           workspace: shared-data
       params:
         - name: IMAGE
-          value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.release-name)-imagestream
+          value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.release-name)-$(params.commit-id)
         - name: TLSVERIFY
           value: 'false'
     # Task 4: Create and deploy IntegrationServer manifest
-    - name: deploy-integration-server
+    - name: deploy-to-test
       taskRef:
         name: create-and-deploy-integration-server
       runAfter:
         - build-ace-image
       params:
         - name: release-name
+          value: $(params.release-name)-test
+        - name: image-name
           value: $(params.release-name)
         - name: namespace
           value: $(context.pipelineRun.namespace)
+        - name: commit-id
+          value: $(params.commit-id)
     # Task 5: Run SoapUI tests against deployed route
     - name: run-e2e-tests
       taskRef:
         name: run-e2e-tests
       runAfter:
-        - deploy-integration-server
- 
+        - deploy-to-test
+      workspaces:
+        - name: source
+          workspace: shared-data
+    # Task 6: Deploy to production environment
+    - name: deploy-to-prod
+      taskRef:
+        name: create-and-deploy-integration-server
+      runAfter:
+        - run-e2e-tests
+      params:
+        - name: release-name
+          value: $(params.release-name)
+        - name: namespace
+          value: $(context.pipelineRun.namespace)
+        - name: commit-id
+          value: $(params.commit-id)

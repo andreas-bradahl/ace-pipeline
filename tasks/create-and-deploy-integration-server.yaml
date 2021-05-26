@@ -7,9 +7,15 @@ spec:
     - name: release-name
       type: string
       description: The release name of the application
+    - name: image-name
+      type: string
+      description: The name of the container image to use
     - name: namespace
       type: string
       description: The namespace (OCP project) the application resides in
+    - name: commit-id
+      type: string
+      description: The commit hash identifier for the current HEAD commit
   steps:
     - name: create-is-manifest
       image: image-registry.openshift-image-registry.svc:5000/openshift/origin-cli
@@ -29,7 +35,8 @@ spec:
           pod:
             containers:
               runtime:
-                image: image-registry.openshift-image-registry.svc:5000/$(params.namespace)/$(params.release-name)-imagestream
+                image: image-registry.openshift-image-registry.svc:5000/$(params.namespace)/$(params.image-name)-$(params.commit-id)
+                imagePullPolicy: Always
                 resources:
                   limits:
                     cpu: 500m
