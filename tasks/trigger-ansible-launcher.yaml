@@ -5,11 +5,7 @@ metadata:
 spec:
   # params:
   #   - name: commit-id
-  #     type: string
-  #     description: The commit hash identifier for the current HEAD commit
   #   - name: release-name
-  #     type: string
-  #     description: The release name of the application
   # workspaces:
   #   - name: source
   steps:

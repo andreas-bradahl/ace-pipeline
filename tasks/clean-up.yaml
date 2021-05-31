@@ -5,8 +5,6 @@ metadata:
 spec:
   params:
     - name: release-name
-      type: string
-      description: The name of the integration server to be deleted
   steps:
     - name: delete-test-environment
       image: image-registry.openshift-image-registry.svc:5000/openshift/origin-cli
