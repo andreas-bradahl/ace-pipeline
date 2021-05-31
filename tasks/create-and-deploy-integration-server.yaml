@@ -53,9 +53,16 @@ spec:
           version: 11.0.0.11-r2
           replicas: 1
           barURL: ''
+          labels:
+            commitId: $(params.commit-id)
         EOF
     - name: deploy-is-manifest
       image: image-registry.openshift-image-registry.svc:5000/openshift/origin-cli
       script: |
         echo "Applying IntegrationServer manifest to OpenShift cluster"
         oc apply -f integrationserver.yaml
+    - name: wait-for-pod-readiness
+      image: image-registry.openshift-image-registry.svc:5000/openshift/origin-cli
+      script: |
+        sleep 20 # todo: waits for deployment - should be replaced with a more elegant wait
+        kubectl wait --for=condition=Available deployment/$(params.release-name)-is --timeout=90s
