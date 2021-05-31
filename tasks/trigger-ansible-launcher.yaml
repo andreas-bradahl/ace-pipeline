@@ -1,0 +1,20 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: trigger-ansible-launcher
+spec:
+  # params:
+  #   - name: commit-id
+  #     type: string
+  #     description: The commit hash identifier for the current HEAD commit
+  #   - name: release-name
+  #     type: string
+  #     description: The release name of the application
+  # workspaces:
+  #   - name: source
+  steps:
+    - name: run-curl-against-satellite
+      image: image-registry.openshift-image-registry.svc:5000/openshift/origin-cli
+      script: |
+        curl -X POST -k -H "Content-type: application/json" -d '{"description":"Test fra OpenShift pipelines til DIP", "application":null, "scope":"write"}' https://tine_automation_tekton:'W@7P9Zd6QGr5y1K7!N*4V90!A^ke4fCGa&r%dRp@ws8k%Xm1'@https://awx.tine.no/api/v2/users/tine_automation_tekton/personal_tokens/ | python -m json.tool
+        curl -k -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -X POST  -d '{}' https://tower/api/v2/job_templates/5/launch/

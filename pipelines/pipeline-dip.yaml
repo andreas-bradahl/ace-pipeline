@@ -1,0 +1,36 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: pipeline-dip
+spec:
+  description: |
+    Simple pipeline to demonstrate ACE build on DIP.
+  params:
+  - name: repo-url
+    type: string
+    description: The git repository URL to clone from.
+  - name: release-name
+    type: string
+    description: The release name of the application
+  workspaces:
+  - name: shared-data
+    description: |
+      This workspace will receive the cloned git repo and be passed
+      to the next Task for the commit to be checked.
+  tasks:
+    # Task 1: Clone git repository to workspace
+    - name: fetch-repo
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      workspaces:
+      - name: output
+        workspace: shared-data
+      params:
+      - name: url
+        value: $(params.repo-url)
+    - name: inspect-file-structure
+      taskRef:
+        name: inspect
+      runAfter:
+        - fetch-repo
