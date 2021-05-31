@@ -81,8 +81,18 @@ spec:
         - run-e2e-tests
       params:
         - name: release-name
+          value: $(params.release-name)-prod
+        - name: image-name
           value: $(params.release-name)
         - name: namespace
           value: $(context.pipelineRun.namespace)
         - name: commit-id
           value: $(params.commit-id)
+  finally:
+    # Task 7: Clean up
+    - name: clean-up
+      taskRef:
+        name: clean-up
+      params:
+        - name: release-name
+          value: $(params.release-name)
