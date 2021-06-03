@@ -9,9 +9,9 @@ spec:
   - name: repo-url
     type: string
     description: The git repository URL to clone from.
-  - name: release-name
+  - name: application-name
     type: string
-    description: The release name of the application
+    description: The name of the application
   workspaces:
   - name: shared-data
     description: |
@@ -34,3 +34,51 @@ spec:
         name: inspect
       runAfter:
         - fetch-repo
+    # Task 2: Build BAR
+    - name: build-bar
+      taskRef:
+        name: build-bar
+      runAfter:
+        - fetch-repo
+      workspaces:
+      - name: cloned-repo
+        workspace: shared-data
+      params:
+      - name: application-name
+        value: $(params.application-name)
+    # Debugging task
+    - name: inspect-file-structure
+      taskRef:
+        name: inspect
+      runAfter:
+        - fetch-repo
+    # Task 3: Push deployment artifacts to Satellite repo
+    - name: push-artifacts
+      taskRef:
+        name: push-artifacts
+      runAfter:
+        - build-bar
+      workspaces:
+      - name: cloned-repo
+        workspace: shared-data
+      params:
+      - name: application-name
+        value: $(params.application-name)
+    # Task 4: Trigger Ansible playbook
+    - name: trigger-ansible-deploy
+      taskRef:
+        name: trigger-ansible-deploy
+      runAfter:
+        - push-artifacts
+      workspaces:
+      - name: cloned-repo
+        workspace: shared-data
+      params:
+      - name: application-name
+        value: $(params.application-name)
+    # Debugging task
+    - name: inspect-file-structure
+      taskRef:
+        name: inspect
+      runAfter:
+        - fetch-repo    

@@ -1,0 +1,18 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: trigger-ansible-deploy
+spec:
+  # params:
+  #   - name: commit-id
+  #   - name: release-name
+  # workspaces:
+  #   - name: source
+  steps:
+    - name: curl-ansible-tower
+      image: image-registry.openshift-image-registry.svc:5000/openshift/origin-cli
+      script: |
+        #!/usr/bin/env bash
+        # username, password and json body must be parameterized
+        TOKEN=$(curl -ku tine_automation_tekton:'W@7P9Zd6QGr5y1K7!N*4V90!A^ke4fCGa&r%dRp@ws8k%Xm1' -H "Content-Type: application/json" -X POST -d '{"description":"Tower CLI", "application":null, "scope":"write"}' https://awx.tine.no/api/v2/users/6/personal_tokens/ | jq -r '.token')
+        curl -k -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -X POST  -d '{"limit":"TSTAPP668DIP003.tine.no","extra_vars":{"file_repo":"http://satellite.tine.no/pulp/isos/TINE_SA/Library/custom/DIP_File_Repositories/DIP_Deploy/"}}' https://awx.tine.no/api/v2/job_templates/35/launch/

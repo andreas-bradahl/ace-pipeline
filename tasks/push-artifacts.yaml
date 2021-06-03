@@ -1,0 +1,24 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: push-artifacts
+spec:
+  # params:
+  #   - name: commit-id
+  #   - name: release-name
+  workspaces:
+    - name: cloned-repo
+  steps:
+    - name: ssh-satellite
+      image: image-registry.openshift-image-registry.svc:5000/openshift/origin-cli
+      script: |
+        #!/usr/bin/env bash
+        cd cloned-repo
+        # This can probably be divided into separate steps with a step template
+        scp -i ~/.ssh/id_rsa.pub bars/$(params.application-name).bar \ 
+          $(params.app-repo-user)@$(params.app-repo-hostname):$(params.application-name)/$(params.application-name).bar
+        scp -i ~/.ssh/id_rsa.pub config/mq-config \ 
+          $(params.app-repo-user)@$(params.app-repo-hostname):$(params.application-name)/config/mq-config
+        scp -i ~/.ssh/id_rsa.pub config/odbc-config \
+          $(params.app-repo-user)@$(params.app-repo-hostname):$(params.application-name)/config/odbc-config
+          

@@ -1,0 +1,18 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: build-bar
+spec:
+  params:
+    - name: application-name
+  workspaces:
+    - name: cloned-repo
+  steps:
+    - name: packagebar-applybaroverrides
+      image: ibm/ace-server:latest
+      script: |
+        source /opt/ibm/ace-11/server/bin/mqsiprofile
+        cd cloned-repo
+        mkdir bars
+        mqsipackagebar -w . -a bars/$(params.application-name).bar -k $(params.application-name)
+        mqsiapplybaroverrides -b bars/$(params.application-name).bar -p config/overrides/$(params.application-name).properties
