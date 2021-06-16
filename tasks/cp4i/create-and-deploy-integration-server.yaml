@@ -10,20 +10,23 @@ spec:
     - name: commit-id
   steps:
     - name: create-is-manifest
-      image: image-registry.openshift-image-registry.svc:5000/openshift/origin-cli
+      image: image-registry.openshift-image-registry.svc:5000/openshift/cli
       script: |
-        echo "Creating IntegrationServer manifest"
+        printf "Creating IntegrationServer manifest"
         cat << EOF > integrationserver.yaml
         apiVersion: appconnect.ibm.com/v1beta1
         kind: IntegrationServer
         metadata:
           name: $(params.release-name)
+          labels:
+            group: mes
+            commitId: $(params.commit-id)
           namespace: $(params.namespace)
         spec:
           license:
             accept: true
-            license: L-APEH-BY5CY7
-            use: CloudPakForIntegrationProduction
+            license: L-APEH-BTHFYQ
+            use: CloudPakForIntegrationNonProduction
           pod:
             containers:
               runtime:
@@ -42,19 +45,33 @@ spec:
           designerFlowsOperationMode: disabled
           service:
             endpointType: http
-          version: 11.0.0.11-r2
+          version: 11.0.0.10-r3-eus
           replicas: 1
           barURL: ''
-          labels:
-            commitId: $(params.commit-id)
         EOF
     - name: deploy-is-manifest
-      image: image-registry.openshift-image-registry.svc:5000/openshift/origin-cli
+      image: image-registry.openshift-image-registry.svc:5000/openshift/cli
       script: |
-        echo "Applying IntegrationServer manifest to OpenShift cluster"
+        printf "Applying IntegrationServer manifest to OpenShift cluster"
         oc apply -f integrationserver.yaml
     - name: wait-for-pod-readiness
-      image: image-registry.openshift-image-registry.svc:5000/openshift/origin-cli
+      image: image-registry.openshift-image-registry.svc:5000/openshift/cli
       script: |
-        sleep 20 # todo: waits for deployment - should be replaced with a more elegant wait
-        kubectl wait --for=condition=Available deployment/$(params.release-name)-is --timeout=90s
+        #!/bin/bash
+        
+        printf "Waiting for deployment to be created\n."
+
+        timeout 5m bash -c 'until oc get deployment.apps/$(params.release-name)-is &> /dev/null
+        do
+          printf "." 
+          sleep 2
+        done'
+
+        if [[ $(oc get deployment.apps/$(params.release-name)-is) ]]
+        then
+          printf "Deployment found.\n"
+          printf "Waiting for deployment condition=Available.\n"
+          oc wait --for=condition=Available deployment/$(params.release-name)-is --timeout=90s
+        else
+          printf "Timed out - deployment was not found."
+        fi
