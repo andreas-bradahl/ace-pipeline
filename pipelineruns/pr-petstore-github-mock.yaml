@@ -1,0 +1,23 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: petstore-pr
+spec:
+  pipelineRef:
+    name: pipeline-ace
+  params:
+  - name: repo-url
+    value: 'https://github.com/andreas-bradahl/petstore.git'
+  - name: release-name
+    value: 'petstore'
+  - name: commit-id
+    value: 'this1is2a3mocked4commit5id'
+  workspaces:
+    - name: shared-data
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
