@@ -7,22 +7,8 @@ spec:
     - name: release-name
   steps:
     - name: delete-test-environment
-      image: image-registry.openshift-image-registry.svc:5000/openshift/origin-cli
+      image: image-registry.openshift-image-registry.svc:5000/openshift/cli
       command:
         - oc
         - delete
         - integrationserver.appconnect.ibm.com/$(params.release-name)-test
-    # - name: delete-completed-pods
-    #   image: image-registry.openshift-image-registry.svc:5000/openshift/origin-cli
-    #   command:
-    #     - oc
-    #     - delete
-    #     - pod
-    #     - --field-selector=status.phase==Succeeded
-    # - name: delete-failed-pods
-    #   image: image-registry.openshift-image-registry.svc:5000/openshift/origin-cli
-    #   command:
-    #     - oc
-    #     - delete
-    #     - pod
-    #     - --field-selector=status.phase==Failed
