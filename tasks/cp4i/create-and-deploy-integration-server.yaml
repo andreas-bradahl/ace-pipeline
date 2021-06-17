@@ -71,6 +71,7 @@ spec:
         then
           printf "Deployment found.\n"
           printf "Waiting for deployment condition=Available.\n"
+          # Waits until pod is ready for traffic
           oc wait --for=condition=Available deployment/$(params.release-name)-is --timeout=90s
         else
           printf "Timed out - deployment was not found."
