@@ -69,7 +69,7 @@ spec:
 
         if [[ $(oc get deployment.apps/$(params.release-name)-is) ]]
         then
-          printf "Deployment found.\n"
+          printf "\nDeployment found.\n"
           printf "Waiting for deployment condition=Available.\n"
           # Waits until pod is ready for traffic
           oc wait --for=condition=Available deployment/$(params.release-name)-is --timeout=90s
