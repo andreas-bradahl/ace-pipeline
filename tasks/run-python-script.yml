@@ -1,0 +1,18 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: run-python-script
+spec:
+  params:
+    - name: script-name
+  workspaces:
+    - name: build-scripts
+  steps:
+    - name: run-script
+      image: image-registry.openshift-image-registry.svc:5000/openshift/cli
+      script: |
+        #!/bin/bash
+        printf "Running script '$(params.script-name)'\n"
+        printf "\n"
+        python /workspace/build-scripts/scripts/$(params.script-name).py
+        
