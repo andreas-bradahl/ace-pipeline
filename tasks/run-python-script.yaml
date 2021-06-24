@@ -5,8 +5,9 @@ metadata:
 spec:
   params:
     - name: script-name
+    - name: argument-list
   workspaces:
-    - name: build-scripts
+    - name: data-location
   steps:
     - name: run-script
       image: image-registry.openshift-image-registry.svc:5000/openshift/cli
@@ -14,5 +15,6 @@ spec:
         #!/bin/bash
         printf "Running script '$(params.script-name)'\n"
         printf "\n"
-        python /workspace/build-scripts/scripts/$(params.script-name).py
+        printf "/workspace/data-location/scripts/$(params.script-name).py $(params.argument-list)"
+        python /workspace/data-location/scripts/$(params.script-name).py $(params.argument-list)
         

@@ -9,7 +9,9 @@ spec:
   - name: repo-url
     value: 'https://github.com/andreas-bradahl/ace-pipelines-build-repo.git'
   - name: script-name
-    value: test_script
+    value: store_repo_list
+  - name: argument-list
+    value: "\"petstore-topic\""
   # - name: release-name
   #   value: 'petstore'
   # - name: commit-id

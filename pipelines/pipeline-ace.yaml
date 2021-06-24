@@ -12,7 +12,12 @@ spec:
     description: The git repository URL to clone from.
   - name: script-name
     type: string
-    description: The name of the Python script to be run
+    description: The name of the Python script to be run (name without .py extension)
+  - name: argument-list
+    type: string
+    description: |
+      The list of arguments to pass to the Python script as one single string.
+      Separate arguments with spaces, and add \" before first argument and after last argument.
   # - name: release-name
   #   type: string
   #   description: The release name of the application
@@ -46,17 +51,28 @@ spec:
       - name: source
         workspace: shared-data
     # Run test script from pipeline
-    - name: run-test-script
+    - name: store-repo-list
       taskRef:
         name: run-python-script
       runAfter:
         - inspect
       workspaces:
-      - name: build-scripts
+      - name: data-location
         workspace: shared-data
       params:
         - name: script-name
-          value: test_script
+          value: $(params.script-name)
+        - name: argument-list
+          value: $(params.argument-list)
+    # Inspect workspace after repo list is downloaded
+    - name: inspect-repo-list
+      taskRef: 
+        name: inspect
+      runAfter:
+        - store-repo-list
+      workspaces:
+      - name: source
+        workspace: shared-data
     # Task 2: Run code level tests, continuous inspection etc.
     # Task 3: Build ACE image and push to OCP registry
   #   - name: build-ace-image
