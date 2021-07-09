@@ -11,11 +11,13 @@ spec:
   - name: script-name
     value: store_repo_list
   - name: argument-list
-    value: "\"petstore-topic\""
+    value: "\"petstore-topic data-location/repos.json\""
+  - name: github-tag
+    value: 'petstore-topic'
   # - name: release-name
   #   value: 'petstore'
-  # - name: commit-id
-  #   value: 'this1is2a3mocked4commit5id'
+  - name: commit-id
+    value: 'this1is2a3mocked4commit5id'
   workspaces:
     - name: shared-data
       volumeClaimTemplate:
