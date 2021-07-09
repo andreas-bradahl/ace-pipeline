@@ -67,8 +67,17 @@ spec:
           value: $(params.script-name)
         - name: argument-list
           value: $(params.argument-list)
-    # Inspect workspace after repo list is downloaded
-    - name: inspect-repo-list
+    # Build BAR files and container image
+    - name: build-artifacts
+      taskRef:
+        name: build-artifacts
+      runAfter:
+        - clone-ace-repos
+      workspaces:
+      - name: sources
+        workspace: shared-data
+    # Create an inline Dockerfile to create a container image
+    - name: build-image
       taskRef: 
         name: inspect
       runAfter:
