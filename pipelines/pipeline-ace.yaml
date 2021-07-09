@@ -18,12 +18,15 @@ spec:
     description: |
       The list of arguments to pass to the Python script as one single string.
       Separate arguments with spaces, and add \" before first argument and after last argument.
+  - name: github-tag
+    type: string
+    description: The tag/bundle ID of the application.
   # - name: release-name
   #   type: string
   #   description: The release name of the application
-  # - name: commit-id
-  #   type: string
-  #   description: The commit hash identifier for the current HEAD commit
+  - name: commit-id
+    type: string
+    description: The commit hash identifier for the current HEAD commit
   workspaces:
   - name: shared-data
     description: |
@@ -117,20 +120,20 @@ spec:
   #       - name: source
   #         workspace: shared-data
   #   # Task 6: Deploy to production environment
-  #   - name: deploy-to-prod
-  #     taskRef:
-  #       name: create-and-deploy-integration-server
-  #     runAfter:
-  #       - run-e2e-tests
-  #     params:
-  #       - name: release-name
-  #         value: $(params.release-name)-prod
-  #       - name: image-name
-  #         value: $(params.release-name)
-  #       - name: namespace
-  #         value: $(context.pipelineRun.namespace)
-  #       - name: commit-id
-  #         value: $(params.commit-id)
+    - name: deploy-to-prod
+      taskRef:
+        name: create-and-deploy-integration-server
+      runAfter:
+        - build-image
+      params:
+        - name: release-name
+          value: $(params.github-tag)-prod
+        - name: image-name
+          value: $(params.github-tag)
+        - name: namespace
+          value: $(context.pipelineRun.namespace)
+        - name: commit-id
+          value: $(params.commit-id)
   # finally:
   #   # Task 7: Clean up
   #   - name: clean-up
