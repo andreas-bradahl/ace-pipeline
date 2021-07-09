@@ -67,6 +67,15 @@ spec:
           value: $(params.script-name)
         - name: argument-list
           value: $(params.argument-list)
+    # Git clone all ACE repos
+    - name: clone-ace-repos
+      taskRef:
+        name: clone-ace-repos
+      runAfter:
+        - fetch-and-store-repo-list
+      workspaces:
+      - name: sources
+        workspace: shared-data
     # Build BAR files and container image
     - name: build-artifacts
       taskRef:
