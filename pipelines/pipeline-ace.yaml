@@ -33,7 +33,7 @@ spec:
       This workspace will receive the cloned git repo and be passed
       to the next Task for the commit to be checked.
   tasks:
-    # Task 1: Clone git repository with build scripts to workspace
+    # Clone git repository with build scripts to workspace
     - name: fetch-build-scripts
       taskRef:
         name: git-clone
@@ -44,21 +44,12 @@ spec:
       params:
       - name: url
         value: $(params.repo-url)
-    # Debugging task
-    - name: inspect
-      taskRef: 
-        name: inspect
-      runAfter:
-        - fetch-build-scripts
-      workspaces:
-      - name: source
-        workspace: shared-data
-    # Run test script from pipeline
-    - name: store-repo-list
+    # Run Python script which fetches and stores list of repos
+    - name: fetch-and-store-repo-list
       taskRef:
         name: run-python-script
       runAfter:
-        - inspect
+        - fetch-build-scripts
       workspaces:
       - name: data-location
         workspace: shared-data
@@ -87,7 +78,7 @@ spec:
         workspace: shared-data
     # Create an inline Dockerfile to create a container image
     - name: build-image
-      taskRef: 
+      taskRef:
         name: buildah
         kind: ClusterTask
       runAfter:
