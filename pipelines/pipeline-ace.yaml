@@ -88,28 +88,18 @@ spec:
     # Create an inline Dockerfile to create a container image
     - name: build-image
       taskRef: 
-        name: inspect
+        name: buildah
+        kind: ClusterTask
       runAfter:
-        - store-repo-list
+      - build-artifacts
       workspaces:
       - name: source
         workspace: shared-data
-    # Task 2: Run code level tests, continuous inspection etc.
-    # Task 3: Build ACE image and push to OCP registry
-  #   - name: build-ace-image
-  #     taskRef:
-  #       name: buildah
-  #       kind: ClusterTask
-  #     runAfter:
-  #       - fetch-repo
-  #     workspaces:
-  #       - name: source
-  #         workspace: shared-data
-  #     params:
-  #       - name: IMAGE
-  #         value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.release-name)-$(params.commit-id)
-  #       - name: TLSVERIFY
-  #         value: 'false'
+      params:
+      - name: IMAGE
+        value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.github-tag)-$(params.commit-id)
+      - name: TLSVERIFY
+        value: 'false'
   #   # Task 4: Create and deploy IntegrationServer manifest
   #   - name: deploy-to-test
   #     taskRef:
