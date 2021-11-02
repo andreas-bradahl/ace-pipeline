@@ -14,7 +14,7 @@ spec:
     value: "\"petstore-topic data-location/repos.json\""
   - name: github-tag
     value: 'petstore-topic'
-  - name: release-name
+  - name: application-name
     value: 'petstore'
   - name: commit-id
     value: 'this1is2a3mocked4commit5id'

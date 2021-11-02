@@ -4,11 +4,11 @@ metadata:
   name: clean-up
 spec:
   params:
-    - name: release-name
+    - name: application-name
   steps:
     - name: delete-test-environment
       image: image-registry.openshift-image-registry.svc:5000/openshift/cli
       command:
         - oc
         - delete
-        - integrationserver.appconnect.ibm.com/$(params.release-name)-test
+        - integrationserver.appconnect.ibm.com/$(params.application-name)-test

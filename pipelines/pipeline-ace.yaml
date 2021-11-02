@@ -26,7 +26,7 @@ spec:
   - name: github-tag
     type: string
     description: The tag/bundle ID of the application.
-  - name: release-name
+  - name: application-name
     type: string
     description: The release name of the application
   - name: commit-id
@@ -98,10 +98,10 @@ spec:
   #     runAfter:
   #       - build-ace-image
   #     params:
-  #       - name: release-name
-  #         value: $(params.release-name)-test
+  #       - name: application-name
+  #         value: $(params.application-name)-test
   #       - name: image-name
-  #         value: $(params.release-name)
+  #         value: $(params.application-name)
   #       - name: namespace
   #         value: $(context.pipelineRun.namespace)
   #       - name: commit-id
@@ -113,8 +113,8 @@ spec:
   #     runAfter:
   #       - deploy-to-test
   #     params:
-  #       - name: release-name
-  #         value: $(params.release-name)
+  #       - name: application-name
+  #         value: $(params.application-name)
   #     workspaces:
   #       - name: source
   #         workspace: shared-data
@@ -125,7 +125,7 @@ spec:
       runAfter:
         - build-image
       params:
-        - name: release-name
+        - name: application-name
           value: $(params.github-tag)-prod
         - name: image-name
           value: $(params.github-tag)
@@ -139,5 +139,5 @@ spec:
   #     taskRef:
   #       name: clean-up
   #     params:
-  #       - name: release-name
-  #         value: $(params.release-name)
+  #       - name: application-name
+  #         value: $(params.application-name)

@@ -4,7 +4,7 @@ metadata:
   name: create-and-deploy-integration-server
 spec:
   params:
-    - name: release-name
+    - name: application-name
     - name: image-name
     - name: namespace
     - name: commit-id
@@ -17,9 +17,9 @@ spec:
         apiVersion: appconnect.ibm.com/v1beta1
         kind: IntegrationServer
         metadata:
-          name: $(params.release-name)
+          name: $(params.application-name)
           labels:
-            topic: $(params.release-name)
+            topic: $(params.application-name)
             commitId: $(params.commit-id)
           namespace: $(params.namespace)
         spec:
@@ -61,16 +61,16 @@ spec:
         
         printf "Waiting for deployment to be created\n."
 
-        timeout 10m bash -c 'until oc get deployment.apps/$(params.release-name)-is &> /dev/null
+        timeout 10m bash -c 'until oc get deployment.apps/$(params.application-name)-is &> /dev/null
         do
           printf "." 
           sleep 2
         done'
 
-        if [[ $(oc get deployment.apps/$(params.release-name)-is) ]]
+        if [[ $(oc get deployment.apps/$(params.application-name)-is) ]]
         then
           printf "\nDeployment found.\n"
           printf "Waiting for deployment condition=Available.\n"
           # Waits until pod is ready for traffic
-          oc wait --for=condition=Available deployment/$(params.release-name)-is --timeout=90s
+          oc wait --for=condition=Available deployment/$(params.application-name)-is --timeout=90s
         fi

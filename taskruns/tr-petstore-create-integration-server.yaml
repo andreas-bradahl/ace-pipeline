@@ -6,7 +6,7 @@ spec:
   taskRef:
     name: create-and-deploy-integration-server
   params:
-    - name: release-name
+    - name: application-name
       value: 'petstore-test'
     - name: image-name
       value: 'petstore'
