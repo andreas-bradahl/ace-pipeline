@@ -26,9 +26,9 @@ spec:
   - name: github-tag
     type: string
     description: The tag/bundle ID of the application.
-  # - name: release-name
-  #   type: string
-  #   description: The release name of the application
+  - name: release-name
+    type: string
+    description: The release name of the application
   - name: commit-id
     type: string
     description: The commit hash identifier for the current HEAD commit
