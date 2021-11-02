@@ -12,7 +12,7 @@ spec:
       This workspace will receive the cloned git repo and be passed
       to the next Task for the commit to be checked.
   params:
-  - name: repo-url
+  - name: build-scripts-url
     type: string
     description: The git repository URL to clone from.
   - name: script-name
@@ -43,7 +43,7 @@ spec:
         workspace: shared-data
       params:
       - name: url
-        value: $(params.repo-url)
+        value: $(params.build-scripts-url)
     # Run Python script which fetches and stores list of repos
     - name: fetch-and-store-repo-list
       taskRef:
