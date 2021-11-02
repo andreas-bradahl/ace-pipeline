@@ -6,6 +6,11 @@ spec:
   description: |
     Simple pipeline to demonstrate ACE build on OpenShift
     pipelines.
+  workspaces:
+  - name: shared-data
+    description: |
+      This workspace will receive the cloned git repo and be passed
+      to the next Task for the commit to be checked.
   params:
   - name: repo-url
     type: string
@@ -27,11 +32,6 @@ spec:
   - name: commit-id
     type: string
     description: The commit hash identifier for the current HEAD commit
-  workspaces:
-  - name: shared-data
-    description: |
-      This workspace will receive the cloned git repo and be passed
-      to the next Task for the commit to be checked.
   tasks:
     # Clone git repository with build scripts to workspace
     - name: fetch-build-scripts
