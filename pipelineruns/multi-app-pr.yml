@@ -7,7 +7,7 @@ spec:
     name: pipeline-ace
   params:
   - name: build-scripts-url
-    value: 'https://github.com/andreas-bradahl/ace-pipelines-build-repo.git'
+    value: 'https://github.com/andreasbradahl-avella/ace-pipelines-build-repo.git'
   - name: script-name
     value: store_repo_list
   - name: argument-list
