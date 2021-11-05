@@ -12,29 +12,27 @@ spec:
       This workspace will receive the cloned git repo and be passed
       to the next Task for the commit to be checked.
   params:
-  - name: build-scripts-url
+  - name: event-repo
     type: string
-    description: The git repository URL to clone from.
-  - name: script-name
+    description: The git repository that was modified to trigger pipeline run
+  - name: build-scripts-repo
     type: string
-    description: The name of the Python script to be run (name without .py extension)
-  - name: argument-list
-    type: string
-    description: |
-      The list of arguments to pass to the Python script as one single string.
-      Separate arguments with spaces, and add \" before first argument and after last argument.
-  - name: github-tag
+    description: The git repository with Python build scripts
+  - name: github-topic
     type: string
     description: The tag/bundle ID of the application.
-  - name: application-name
+  - name: github-user
     type: string
-    description: The release name of the application
-  - name: commit-id
-    type: string
-    description: The commit hash identifier for the current HEAD commit
+    description: The organization/user of the GitHub account where the event has happened.
+  # - name: application-name
+  #   type: string
+  #   description: The release name of the application
+  # - name: commit-id
+  #   type: string
+  #   description: The commit hash identifier for the current HEAD commit
   tasks:
-    # Clone git repository with build scripts to workspace
-    - name: fetch-build-scripts
+    # Clone git repository that was modified
+    - name: fetch-event-repo
       taskRef:
         name: git-clone
         kind: ClusterTask
@@ -43,54 +41,99 @@ spec:
         workspace: shared-data
       params:
       - name: url
-        value: $(params.build-scripts-url)
-    # Run Python script which fetches and stores list of repos
-    - name: fetch-and-store-repo-list
+        value: $(params.event-repo)
+      - name: subdirectory
+        value: event-repo
+    # Clone git repository with Python build scripts
+    - name: fetch-build-scripts-repo
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      runAfter:
+        - fetch-event-repo
+      workspaces:
+      - name: output
+        workspace: shared-data
+      params:
+      - name: url
+        value: $(params.build-scripts-repo)
+      - name: subdirectory
+        value: build-scripts-repo
+    # Store repos in json file
+    - name: fetch-dependent-repos
       taskRef:
         name: run-python-script
       runAfter:
-        - fetch-build-scripts
+        - fetch-build-scripts-repo
       workspaces:
       - name: data-location
         workspace: shared-data
       params:
-        - name: script-name
-          value: $(params.script-name)
-        - name: argument-list
-          value: $(params.argument-list)
-    # Git clone all ACE repos
-    - name: clone-ace-repos
+      - name: subfolder
+        value: build-scripts-repo
+      - name: script-name
+        value: get_repo_list
+      - name: argument-list
+        value: "$(params.github-user) $(params.github-topic) /workspace/data-location/repos/repos.json"
+    # Inspect file system
+    - name: inspect
       taskRef:
-        name: clone-ace-repos
+        name: inspect
       runAfter:
-        - fetch-and-store-repo-list
-      workspaces:
-      - name: sources
-        workspace: shared-data
-    # Build BAR files and container image
-    - name: build-artifacts
-      taskRef:
-        name: build-artifacts
-      runAfter:
-        - clone-ace-repos
-      workspaces:
-      - name: sources
-        workspace: shared-data
-    # Create an inline Dockerfile to create a container image
-    - name: build-image
-      taskRef:
-        name: buildah
-        kind: ClusterTask
-      runAfter:
-      - build-artifacts
+        - fetch-dependent-repos
       workspaces:
       - name: source
         workspace: shared-data
       params:
-      - name: IMAGE
-        value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.github-tag)-$(params.commit-id)
-      - name: TLSVERIFY
-        value: 'false'
+      - name: path
+        value: "/workspace"
+    # # Run Python script which fetches and stores list of repos
+    # - name: fetch-and-store-repo-list
+    #   taskRef:
+    #     name: run-python-script
+    #   runAfter:
+    #     - fetch-build-scripts
+    #   workspaces:
+    #   - name: data-location
+    #     workspace: shared-data
+    #   params:
+    #     - name: script-name
+    #       value: $(params.script-name)
+    #     - name: argument-list
+    #       value: $(params.argument-list)
+    # # Git clone all ACE repos
+    # - name: clone-ace-repos
+    #   taskRef:
+    #     name: clone-ace-repos
+    #   runAfter:
+    #     - fetch-and-store-repo-list
+    #   workspaces:
+    #   - name: sources
+    #     workspace: shared-data
+    # # Build BAR files and container image
+    # - name: build-artifacts
+    #   taskRef:
+    #     name: build-artifacts
+    #   runAfter:
+    #     - clone-ace-repos
+    #   workspaces:
+    #   - name: sources
+    #     workspace: shared-data
+    # # Create an inline Dockerfile to create a container image
+    # - name: build-image
+    #   taskRef:
+    #     name: buildah
+    #     kind: ClusterTask
+    #   runAfter:
+    #   - build-artifacts
+    #   workspaces:
+    #   - name: source
+    #     workspace: shared-data
+    #   params:
+    #   - name: IMAGE
+    #     value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.github-tag)-$(params.commit-id)
+    #   - name: TLSVERIFY
+    #     value: 'false'
   #   # Task 4: Create and deploy IntegrationServer manifest
   #   - name: deploy-to-test
   #     taskRef:
@@ -119,20 +162,20 @@ spec:
   #       - name: source
   #         workspace: shared-data
   #   # Task 6: Deploy to production environment
-    - name: deploy-to-prod
-      taskRef:
-        name: create-and-deploy-integration-server
-      runAfter:
-        - build-image
-      params:
-        - name: application-name
-          value: $(params.github-tag)-prod
-        - name: image-name
-          value: $(params.github-tag)
-        - name: namespace
-          value: $(context.pipelineRun.namespace)
-        - name: commit-id
-          value: $(params.commit-id)
+    # - name: deploy-to-prod
+    #   taskRef:
+    #     name: create-and-deploy-integration-server
+    #   runAfter:
+    #     - build-image
+    #   params:
+    #     - name: application-name
+    #       value: $(params.github-tag)-prod
+    #     - name: image-name
+    #       value: $(params.github-tag)
+    #     - name: namespace
+    #       value: $(context.pipelineRun.namespace)
+    #     - name: commit-id
+    #       value: $(params.commit-id)
   # finally:
   #   # Task 7: Clean up
   #   - name: clean-up

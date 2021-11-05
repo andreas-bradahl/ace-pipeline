@@ -1,0 +1,20 @@
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  name: fetch-event-repo-taskrun
+spec:
+  taskRef:
+    name: fetch-event-repo
+  params:
+    - name: event-repo
+      value: 'https://github.com/andreas-bradahl/petstore.git'
+  workspaces:
+    - name: shared-data
+      volumeClaimTemplate:
+        spec:
+          accessModes: [ "ReadWriteOnce" ]
+          storageClassName: "managed-premium"
+          resources:
+            requests:
+              storage: 1Gi
+  

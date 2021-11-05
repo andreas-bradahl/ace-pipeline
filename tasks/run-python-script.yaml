@@ -6,6 +6,7 @@ spec:
   params:
     - name: script-name
     - name: argument-list
+    - name: subfolder
   workspaces:
     - name: data-location
   steps:
@@ -18,8 +19,7 @@ spec:
         #!/bin/bash
         python -m pip install requests
 
-        printf "Running script '$(params.script-name)'\n"
-        printf "\n"
-        printf "/workspace/data-location/scripts/$(params.script-name).py $(params.argument-list)\n"
-        python /workspace/data-location/scripts/$(params.script-name).py $(params.argument-list)
+        printf "\nRunning script '$(params.script-name)'\n"
+
+        python /workspace/data-location/$(params.subfolder)/scripts/$(params.script-name).py $(params.argument-list)
         

@@ -6,9 +6,14 @@ spec:
   params:
     - name: application-name
   steps:
-    - name: delete-test-environment
-      image: image-registry.openshift-image-registry.svc:5000/openshift/cli
+    - name: delete-pipelinerun
+      image: image-registry.openshift-image-registry.svc:5000/openshift/cli  
       command:
         - oc
-        - delete
-        - integrationserver.appconnect.ibm.com/$(params.application-name)-test
+        - 
+    # - name: delete-test-environment
+    #   image: image-registry.openshift-image-registry.svc:5000/openshift/cli
+    #   command:
+    #     - oc
+    #     - delete
+    #     - integrationserver.appconnect.ibm.com/$(params.application-name)-test
