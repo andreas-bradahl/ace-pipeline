@@ -19,7 +19,7 @@ spec:
         #!/bin/bash
         python -m pip install requests
 
-        printf "\nRunning script '$(params.script-name)'\n"
+        printf "Running script '$(params.script-name)'"
 
         python /workspace/data-location/$(params.subfolder)/scripts/$(params.script-name).py $(params.argument-list)
         
