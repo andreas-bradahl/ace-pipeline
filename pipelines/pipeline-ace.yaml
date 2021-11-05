@@ -60,7 +60,7 @@ spec:
       - name: subdirectory
         value: build-scripts-repo
     # Store repos in json file
-    - name: fetch-dependent-repos
+    - name: store-list-of-dependent-repos
       taskRef:
         name: run-python-script
       runAfter:
@@ -80,7 +80,7 @@ spec:
       taskRef:
         name: inspect
       runAfter:
-        - fetch-dependent-repos
+        - store-list-of-dependent-repos
       workspaces:
       - name: source
         workspace: shared-data
