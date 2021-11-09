@@ -12,10 +12,10 @@ spec:
       This workspace will receive the cloned git repo and be passed
       to the next Task for the commit to be checked.
   params:
-  - name: event-repo
+  - name: event-repo-name
     type: string
     description: The git repository that was modified to trigger pipeline run
-  - name: build-scripts-repo
+  - name: build-scripts-repo-name
     type: string
     description: The git repository with Python build scripts
   - name: github-topic
@@ -41,9 +41,9 @@ spec:
         workspace: shared-data
       params:
       - name: url
-        value: $(params.event-repo)
+        value: https://github.com/andreasbradahl-avella/$(params.event-repo-name).git
       - name: subdirectory
-        value: event-repo
+        value: repos/$(params.event-repo-name)
     # Clone git repository with Python build scripts
     - name: fetch-build-scripts-repo
       taskRef:
@@ -56,9 +56,9 @@ spec:
         workspace: shared-data
       params:
       - name: url
-        value: $(params.build-scripts-repo)
+        value: https://github.com/andreasbradahl-avella/$(params.build-scripts-repo-name).git
       - name: subdirectory
-        value: build-scripts-repo
+        value: repos/build-scripts-repo
     # Store repos in json file
     - name: store-list-of-dependent-repos
       taskRef:
@@ -70,7 +70,7 @@ spec:
         workspace: shared-data
       params:
       - name: subfolder
-        value: build-scripts-repo
+        value: repos/build-scripts-repo
       - name: script-name
         value: get_repo_list
       - name: argument-list
