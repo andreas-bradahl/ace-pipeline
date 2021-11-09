@@ -75,12 +75,24 @@ spec:
         value: get_repo_list
       - name: argument-list
         value: "$(params.github-user) $(params.github-topic) /workspace/data-location/repos/repos.json"
+      # Store repos in json file
+    - name: clone-dependent-repos
+      taskRef:
+        name: clone-dependent-repos
+      runAfter:
+        - store-list-of-dependent-repos
+      workspaces:
+      - name: sources
+        workspace: shared-data
+      params:
+      - name: github-user
+        value: $(params.github-user)
     # Inspect file system
     - name: inspect
       taskRef:
         name: inspect
       runAfter:
-        - store-list-of-dependent-repos
+        - clone-dependent-repos
       workspaces:
       - name: source
         workspace: shared-data
