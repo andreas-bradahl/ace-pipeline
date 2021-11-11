@@ -41,7 +41,7 @@ spec:
         workspace: shared-data
       params:
       - name: url
-        value: https://github.com/andreasbradahl-avella/$(params.event-repo-name).git
+        value: https://github.com/$(params.github-user)/$(params.event-repo-name).git
       - name: subdirectory
         value: repos/$(params.event-repo-name)
     # Clone git repository with Python build scripts
@@ -56,7 +56,7 @@ spec:
         workspace: shared-data
       params:
       - name: url
-        value: https://github.com/andreasbradahl-avella/$(params.build-scripts-repo-name).git
+        value: https://github.com/$(params.github-user)/$(params.build-scripts-repo-name).git
       - name: subdirectory
         value: repos/build-scripts-repo
     # Store repos in json file
@@ -87,12 +87,21 @@ spec:
       params:
       - name: github-user
         value: $(params.github-user)
+    # Build BAR files and Docker images
+    - name: build-artifacts
+      taskRef:
+        name: build-artifacts
+      runAfter:
+        - clone-dependent-repos
+      workspaces:
+      - name: sources
+        workspace: shared-data
     # Inspect file system
     - name: inspect
       taskRef:
         name: inspect
       runAfter:
-        - clone-dependent-repos
+        - build-artifacts
       workspaces:
       - name: source
         workspace: shared-data
