@@ -17,10 +17,11 @@ spec:
         source /opt/ibm/ace-11/server/bin/mqsiprofile
         mkdir /workspace/sources/bars
 
+        BUILD_REPO="build-scripts-repo"
         for repo in *; do
-            if [ -d "$repo" ]; then
+            if [ -d "$repo" ] && [ "$repo" != "$BUILD_REPO" ]; then
                 cd $repo
-                printf '\nCreating BAR file for application %s\n' "${PWD##*/}"
+                printf '\nCreating BAR file for application "%s"\n' "${PWD##*/}"
                 mqsipackagebar -a /workspace/sources/bars/"${PWD##*/}".bar -k source/*
                 cd ..
             fi
@@ -36,14 +37,14 @@ spec:
       script: |
         #!/bin/sh
         printf "Creating inline Dockerfile...\n"
-        cat << 'EOF' > Dockerfile
+        cat << '_EOF_' > Dockerfile
         FROM ibmcom/ace-server:latest
         ENV LICENSE accept
         RUN mkdir /home/aceuser/bars/
         COPY bars/*.bar /home/aceuser/bars/
         RUN source /opt/ibm/ace-11/server/bin/mqsiprofile \
             && for f in /home/aceuser/bars/*.bar; do mqsibar -a $f -w /home/aceuser/ace-server; done
-        EOF
+        _EOF_
 
         cat Dockerfile
         pwd
