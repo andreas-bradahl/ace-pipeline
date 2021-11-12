@@ -6,12 +6,12 @@ spec:
   pipelineRef:
     name: pipeline-ace
   params:
-  - name: event-repo
-    value: 'https://github.com/andreasbradahl-avella/petstore.git'
-  - name: build-scripts-repo
-    value: 'https://github.com/andreasbradahl-avella/ace-pipelines-build-repo.git'
-  - name: github-topic
-    value: pod-petstore1
+  - name: event-repo-name
+    value: petstore
+  # - name: build-scripts-repo
+  #   value: 'https://github.com/andreasbradahl-avella/ace-pipelines-build-repo.git'
+  # - name: github-topic
+  #   value: pod-petstore1
   - name: github-user
     value: andreasbradahl-avella
   # - name: application-name

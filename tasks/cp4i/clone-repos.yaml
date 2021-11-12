@@ -1,0 +1,49 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: clone-repos
+spec:
+  params:
+    - name: event-repo-name
+    - name: github-user
+  workspaces:
+    - name: sources
+  steps:
+    - name: get-topic-and-clone-repos
+      image: alpine
+      securityContext:
+        privileged: true
+        runAsUser: 0
+      script: |
+        #!/bin/sh
+
+        apk add jq curl git
+
+        echo "Event repo name: $(params.event-repo-name)"
+        echo "GitHub user: $(params.github-user)"
+
+        echo "Get pod bundle topic name from repository..."
+        topic=$(curl \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/$(params.github-user)/$(params.event-repo-name) |
+          jq -r '.topics[] | select(. | startswith("pod"))')
+
+        if [ -z "$topic" ]
+        then
+          echo "No topic with pod bundle name found for this repo. Cloning event repo only."
+          $(git clone https://github.com/$(params.github-user)/$(params.event-repo-name).git sources/repos/$(params.event-repo-name))
+        else
+          echo "Get repositories with same topic..."
+          curl \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/search/repositories?q=user:$(params.github-user)+topic:$topic" | 
+            jq -r '[.items[].name]' > repos_list.json
+
+          echo "Found $(jq length repos_list.json) repos with same bundle topic name."
+
+          jq -cr '.[]' repos_list.json | while read repo; do
+              $(git clone https://github.com/$(params.github-user)/$repo.git sources/repos/$repo)
+          done
+        fi
+
+        find /workspace
