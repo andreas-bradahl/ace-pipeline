@@ -37,71 +37,15 @@ spec:
         value: $(params.event-repo-name)
       - name: github-user
         value: $(params.github-user)
-    # # Clone git repository that was modified
-    # - name: fetch-event-repo
-    #   taskRef:
-    #     name: git-clone
-    #     kind: ClusterTask
-    #   workspaces:
-    #   - name: output
-    #     workspace: shared-data
-    #   params:
-    #   - name: url
-    #     value: https://github.com/$(params.github-user)/$(params.event-repo-name).git
-    #   - name: subdirectory
-    #     value: repos/$(params.event-repo-name)
-    # # Clone git repository with Python build scripts
-    # - name: fetch-build-scripts-repo
-    #   taskRef:
-    #     name: git-clone
-    #     kind: ClusterTask
-    #   runAfter:
-    #     - fetch-event-repo
-    #   workspaces:
-    #   - name: output
-    #     workspace: shared-data
-    #   params:
-    #   - name: url
-    #     value: https://github.com/$(params.github-user)/$(params.build-scripts-repo-name).git
-    #   - name: subdirectory
-    #     value: repos/build-scripts-repo
-    # # Store repos in json file
-    # - name: store-list-of-dependent-repos
-    #   taskRef:
-    #     name: run-python-script
-    #   runAfter:
-    #     - fetch-build-scripts-repo
-    #   workspaces:
-    #   - name: data-location
-    #     workspace: shared-data
-    #   params:
-    #   - name: subfolder
-    #     value: repos/build-scripts-repo
-    #   - name: script-name
-    #     value: get_repo_list
-    #   - name: argument-list
-    #     value: "$(params.github-user) $(params.github-topic) /workspace/data-location/repos/repos.json"
-    #   # Store repos in json file
-    # - name: clone-dependent-repos
-    #   taskRef:
-    #     name: clone-dependent-repos
-    #   runAfter:
-    #     - store-list-of-dependent-repos
-    #   workspaces:
-    #   - name: sources
-    #     workspace: shared-data
-    #   params:
-    #   - name: github-user
-    #     value: $(params.github-user)
     # Build BAR files and Docker images
-    # - name: build-artifacts
-    #   taskRef:
-    #     name: build-artifacts
-    #   runAfter:
-    #     - clone-dependent-repos
-    #   workspaces:
-    #   - name: sources
-    #     workspace: shared-data
+    - name: build-artifacts
+      taskRef:
+        name: build-artifacts
+      runAfter:
+        - clone-repos
+      workspaces:
+      - name: sources
+        workspace: shared-data
     # # Inspect file system
     # - name: inspect
     #   taskRef:
