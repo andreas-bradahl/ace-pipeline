@@ -7,43 +7,44 @@ spec:
     - name: sources
   steps:
     - name: build-bar-files
+    # TODO: find the correct ACE image to use
       image: ibmcom/ace-server
-      securityContext:
-        privileged: true
-        runAsUser: 0
+      # securityContext:
+      #   privileged: true
+      #   runAsUser: 0
       workingDir: /workspace/sources/repos
       script: |
         #!/bin/sh
         source /opt/ibm/ace-11/server/bin/mqsiprofile
-        mkdir /workspace/sources/bars
+        mkdir ../bars
 
         for repo in *; do
             if [ -d "$repo" ]; then
                 cd $repo
                 printf '\nCreating BAR file for application %s\n' "${PWD##*/}"
-                mqsipackagebar -a /workspace/sources/bars/"${PWD##*/}".bar -k source/*
+                # mqsipackagebar -a /workspace/sources/bars/"${PWD##*/}".bar -k source/*
                 cd ..
             fi
         done
 
-        ls -l /workspace/sources/bars
-    - name: create-inline-dockerfile
-      image: image-registry.openshift-image-registry.svc:5000/openshift/cli
-      securityContext:
-        privileged: true
-        runAsUser: 0
-      workingDir: /workspace/sources
-      script: |
-        #!/bin/sh
-        printf "Creating inline Dockerfile...\n"
-        cat << 'EOF' > Dockerfile
-        FROM ibmcom/ace-server:latest
-        ENV LICENSE accept
-        RUN mkdir /home/aceuser/bars/
-        COPY bars/*.bar /home/aceuser/bars/
-        RUN source /opt/ibm/ace-11/server/bin/mqsiprofile \
-            && for f in /home/aceuser/bars/*.bar; do mqsibar -a $f -w /home/aceuser/ace-server; done
-        EOF
+        find /workspace
+    # - name: create-inline-dockerfile
+    #   image: image-registry.openshift-image-registry.svc:5000/openshift/cli
+    #   securityContext:
+    #     privileged: true
+    #     runAsUser: 0
+    #   workingDir: /workspace/sources
+    #   script: |
+    #     #!/bin/sh
+    #     printf "Creating inline Dockerfile...\n"
+    #     cat << 'EOF' > Dockerfile
+    #     FROM ibmcom/ace-server:latest
+    #     ENV LICENSE accept
+    #     RUN mkdir /home/aceuser/bars/
+    #     COPY bars/*.bar /home/aceuser/bars/
+    #     RUN source /opt/ibm/ace-11/server/bin/mqsiprofile \
+    #         && for f in /home/aceuser/bars/*.bar; do mqsibar -a $f -w /home/aceuser/ace-server; done
+    #     EOF
 
-        cat Dockerfile
-        pwd
+    #     cat Dockerfile
+    #     pwd
