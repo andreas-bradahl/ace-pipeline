@@ -47,9 +47,14 @@ spec:
           done
         fi
 
-        echo "Getting project dependencies..."
-        jq -cr '.[]' dependencies.json | while read dep; do
-            git clone https://github.com/$(params.github-user)/$dep.git sources/repos/deps/$dep
-        done
-
         find /workspace
+    - name: get-dependencies
+      image: alpine
+      securityContext:
+        privileged: true
+        runAsUser: 0
+      workingDir: /workspace/sources
+      script: |
+        #!/bin/sh
+
+         
