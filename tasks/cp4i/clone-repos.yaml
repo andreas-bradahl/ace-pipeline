@@ -50,45 +50,14 @@ spec:
           echo "Found $(jq length repos_list.json) repos with bundle topic name $TOPIC."
 
           jq -cr '.[]' repos_list.json | while read repo; do
-              git clone -b cicd https://github.com/$(params.github-user)/$repo.git common-workspace/$repo
+              python3 build-repo/scripts/fetch_dependencies_recursively.py $repo
           done
         fi
 
-        find /workspace
+        find /workspace -type d
       env:
       - name: GH_TOKEN
         valueFrom:
           secretKeyRef:
             name: tip-git-basic-auth
             key: password
-    - name: get-dependencies
-      image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
-      # securityContext:
-      #   privileged: true
-      #   runAsUser: 0
-      # workingDir: /workspace/sources
-      script: |
-        #!/bin/bash
-        # Get dependencies
-        echo "Getting dependencies..."
-        for repo in common-workspace/*
-        do
-          echo "Looking up projects for $(basename $repo)..."
-          for project in $repo/projects/*
-          do
-            echo "Projects in $(basename $repo):"
-            echo $project
-            python3 build-repo/scripts/get_dependencies.py $project
-
-            # Clone each dependency to common workspace directory
-            jq -cr '.[]' dependencies.json | while read dependency; do
-              git clone -b cicd https://github.com/$(params.github-user)/$dependency.git common-workspace/$dependency
-              # echo $dependency
-            done
-
-          done
-          # Clone each dependency if not exists
-          # echo $(cat dependencies.json)
-        done
-
-        find /workspace
