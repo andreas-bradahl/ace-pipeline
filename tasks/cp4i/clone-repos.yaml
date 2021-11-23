@@ -9,52 +9,91 @@ spec:
   workspaces:
     - name: sources
   steps:
-    - name: get-topic-and-clone-repos
-      image: alpine
-      securityContext:
-        privileged: true
-        runAsUser: 0
-      workingDir: /workspace/sources
+    - name: get-build-repo
+      image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
+      # securityContext:
+      #   privileged: true
+      #   runAsUser: 0
+      # workingDir: /workspace/sources
       script: |
-        #!/bin/sh
-
-        apk add jq curl git
+        #!/bin/bash
 
         echo "Event repo name: $(params.event-repo-name)"
         echo "GitHub user: $(params.github-user)"
 
         echo "Cloning build scripts repo..."
-        git clone https://github.com/$(params.github-user)/ace-pipelines-build-repo.git build-repo
+        # TODO: build repo needs to be transfered to user:tineikt
+        git clone -b cicd https://github.com/andreasbradahl-avella/ace-pipelines-build-repo.git build-repo
+    - name: get-repos-with-this-topic
+      image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
+      # securityContext:
+      #   privileged: true
+      #   runAsUser: 0
+      # workingDir: /workspace/sources
+      script: |
+        #!/bin/bash
         
         echo "Getting pod bundle topic name from repository..."
-        topic="$(build-repo/scripts/get_pod_bundle_topic.sh "$(params.github-user)" "$(params.event-repo-name)")"
+        TOPIC="$(curl \
+                 -u tip-github:"$GH_TOKEN" \
+                 -H "Accept: application/vnd.github.v3+json" \
+                 https://api.github.com/repos/$(params.github-user)/$(params.event-repo-name) | jq -r '.topics[] | select(. | startswith("pod"))'
 
-        if [ -z "$topic" ]
+        echo "Topic: ${TOPIC}"
+
+        if [ -z "$TOPIC" ]
         then
           echo "No topic with pod bundle name found for this repo. Cloning event repo only..."
-          git clone https://github.com/$(params.github-user)/$(params.event-repo-name).git sources/repos/$(params.event-repo-name)
+          git clone -b cicd https://github.com/$(params.github-user)/$(params.event-repo-name).git common-workspace/$(params.event-repo-name)
         else
-          echo "Getting repositories with same topic..."
+          echo "Getting repositories with topic '${TOPIC}'..."
+
           curl \
+            -u tip-github:"$GH_TOKEN" \
             -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/search/repositories?q=user:$(params.github-user)+topic:$topic" | 
+            "https://api.github.com/search/repositories?q=user:$(params.github-user)+topic:${TOPIC}" | 
             jq -r '[.items[].name]' > repos_list.json
 
-          echo "Found $(jq length repos_list.json) repos with same bundle topic name."
+          echo "Found $(jq length repos_list.json) repos with bundle topic name $TOPIC."
 
           jq -cr '.[]' repos_list.json | while read repo; do
-              git clone https://github.com/$(params.github-user)/$repo.git sources/repos/$repo
+              git clone -b cicd https://github.com/$(params.github-user)/$repo.git common-workspace/$repo
           done
         fi
+      env:
+      - name: GH_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: tip-git-basic-auth
+            key: password
+    - name: get-dependencies
+      image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
+      # securityContext:
+      #   privileged: true
+      #   runAsUser: 0
+      # workingDir: /workspace/sources
+      script: |
+        #!/bin/bash
+        # Get dependencies
+        echo "Getting dependencies..."
+        for repo in common-workspace/*
+        do
+          echo "Looking up projects for $(basename $repo)..."
+          for project in $repo/projects/*
+          do
+            echo "Projects in $(basename $repo):"
+            echo $project
+            python3 build-repo/scripts/get_dependencies.py $project
+
+            # Clone each dependency to common workspace directory
+            jq -cr '.[]' dependencies.json | while read dependency; do
+              git clone -b cicd https://github.com/$(params.github-user)/$dependency.git common-workspace/$dependency
+              # echo $dependency
+            done
+
+          done
+          # Clone each dependency if not exists
+          # echo $(cat dependencies.json)
+        done
 
         find /workspace
-    - name: get-dependencies
-      image: alpine
-      securityContext:
-        privileged: true
-        runAsUser: 0
-      workingDir: /workspace/sources
-      script: |
-        #!/bin/sh
-
-         

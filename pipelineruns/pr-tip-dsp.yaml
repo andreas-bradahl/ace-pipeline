@@ -1,0 +1,30 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: tip-dsp-pr
+spec:
+  serviceAccountName: pipeline
+  pipelineRef:
+    name: pipeline-ace
+  params:
+  - name: event-repo-name
+    value: tip004-ace-assortements-rest
+  # - name: build-scripts-repo
+  #   value: 'https://github.com/andreasbradahl-avella/ace-pipelines-build-repo.git'
+  # - name: github-topic
+  #   value: pod-petstore1
+  - name: github-user
+    value: tineikt
+  # - name: application-name
+  #   value: 'petstore'
+  # - name: commit-id
+  #   value: 'this1is2a3mocked4commit5id'
+  workspaces:
+    - name: shared-data
+      volumeClaimTemplate:
+        spec:
+          accessModes: [ "ReadWriteOnce" ]
+          storageClassName: "managed-premium"
+          resources:
+            requests:
+              storage: 1Gi
