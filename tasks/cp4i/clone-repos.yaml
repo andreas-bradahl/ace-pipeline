@@ -11,10 +11,6 @@ spec:
   steps:
     - name: get-build-repo
       image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
-      # securityContext:
-      #   privileged: true
-      #   runAsUser: 0
-      # workingDir: /workspace/sources
       script: |
         #!/bin/bash
 
@@ -23,23 +19,20 @@ spec:
 
         echo "Cloning build scripts repo..."
         # TODO: build repo needs to be transfered to user:tineikt
-        git clone -b cicd https://github.com/andreasbradahl-avella/ace-pipelines-build-repo.git build-repo
+        git clone https://github.com/andreasbradahl-avella/ace-pipelines-build-repo.git build-repo
     - name: get-repos-with-this-topic
       image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
-      # securityContext:
-      #   privileged: true
-      #   runAsUser: 0
-      # workingDir: /workspace/sources
       script: |
         #!/bin/bash
         
         echo "Getting pod bundle topic name from repository..."
-        TOPIC="$(curl \
-                 -u tip-github:"$GH_TOKEN" \
-                 -H "Accept: application/vnd.github.v3+json" \
-                 https://api.github.com/repos/$(params.github-user)/$(params.event-repo-name) | jq -r '.topics[] | select(. | startswith("pod"))'
+        TOPIC=$(curl \
+          -u tip-github:"$GH_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/$(params.github-user)/$(params.event-repo-name) | 
+          jq -r '.topics[] | select(. | startswith("pod"))')
 
-        echo "Topic: ${TOPIC}"
+        echo "Topic found: ${TOPIC}"
 
         if [ -z "$TOPIC" ]
         then
@@ -60,6 +53,8 @@ spec:
               git clone -b cicd https://github.com/$(params.github-user)/$repo.git common-workspace/$repo
           done
         fi
+
+        find /workspace
       env:
       - name: GH_TOKEN
         valueFrom:
