@@ -9,47 +9,46 @@ spec:
   workspaces:
     - name: sources
   steps:
+  
     - name: get-build-repo
       image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
       workingDir: /workspace/sources
       script: |
         #!/bin/bash
 
+        set -eu
+
         echo "Event repo name: $(params.event-repo-name)"
         echo "GitHub user: $(params.github-user)"
 
         # TODO: build repo needs to be transfered to user:tineikt
         git clone https://github.com/andreasbradahl-avella/ace-pipelines-build-repo.git build-repo
+
     - name: get-repos-with-this-topic
       image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
       workingDir: /workspace/sources
       script: |
         #!/bin/bash
-        
-        echo "Getting pod bundle topic name from repository..."
-        TOPIC=$(curl \
-          -u tip-github:"$GH_TOKEN" \
-          -H "Accept: application/vnd.github.v3+json" \
-          https://api.github.com/repos/$(params.github-user)/$(params.event-repo-name) | 
-          jq -r '.topics[] | select(. | startswith("pod"))')
 
-        if [ -z "$TOPIC" ]
-        then
+        set -eu
+
+        SCRIPTS_DIR="build-repo/scripts"
+        REPO_LIST="repos_list.json"
+        TOPIC=$(./$SCRIPTS_DIR/get_topic.sh $GH_TOKEN $(params.github-user) $(params.event-repo-name))
+
+        mkdir -p common-workspace
+
+        if [ -z "$TOPIC" ]; then
           echo "No topic with pod bundle name found for this repo. Cloning event repo only..."
           git clone -b cicd https://github.com/$(params.github-user)/$(params.event-repo-name).git common-workspace/$(params.event-repo-name)
         else
-          echo "Getting repositories with topic '${TOPIC}'..."
+          ./$SCRIPTS_DIR/get_repo_list_for_topic.sh $GH_TOKEN $(params.github-user) $TOPIC $REPO_LIST
 
-          curl \
-            -u tip-github:"$GH_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/search/repositories?q=user:$(params.github-user)+topic:${TOPIC}" | 
-            jq -r '[.items[].name]' > repos_list.json
+          echo "Found $(jq length $REPO_LIST) repos with bundle topic name '$TOPIC'."
 
-          echo "Found $(jq length repos_list.json) repos with bundle topic name $TOPIC."
-
-          jq -cr '.[]' repos_list.json | while read repo; do
-              python3 build-repo/scripts/fetch_dependencies_recursively.py $repo "/workspace/sources"
+          # For each repo in repo list, fetch transitive dependencies
+          jq -cr '.[]' $REPO_LIST | while read repo; do
+            python3 $SCRIPTS_DIR/fetch_dependencies_recursively.py $repo "/workspace/sources/common-workspace"
           done
         fi
 
