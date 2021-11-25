@@ -27,20 +27,39 @@ spec:
         # TODO: build repo needs to be transfered to user:tineikt
         git clone https://github.com/andreasbradahl-avella/ace-pipelines-build-repo.git build-repo
 
-
-        echo $(./$(params.scripts-dir)/get_topic.sh $GH_TOKEN $(params.github-user) $(params.event-repo-name)) > topic.txt
-
-    - name: get-repos-with-this-topic
+    - name: get-topic-from-event-repo
       image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
       workingDir: /workspace/sources
+      env:
+        - name: GH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: tip-git-basic-auth
+              key: password
       script: |
         #!/bin/bash
 
         set -eu
 
-        SCRIPTS_DIR="build-repo/scripts"
-        REPO_LIST="repos_list.json"
-        TOPIC=$(./$SCRIPTS_DIR/get_topic.sh $GH_TOKEN $(params.github-user) $(params.event-repo-name))
+        echo $(./$(params.scripts-dir)/get_topic.sh $GH_TOKEN $(params.github-user) $(params.event-repo-name)) > topic.txt
+
+        echo "Found topic: '$(cat topic.txt)'"
+    
+    - name: get-repos-with-this-topic
+      image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
+      workingDir: /workspace/sources
+      env:
+        - name: GH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: tip-git-basic-auth
+              key: password
+      script: |
+        #!/bin/bash
+
+        set -eu
+
+        TOPIC=$(echo $(cat topic.txt))
 
         mkdir -p common-workspace
 
@@ -58,10 +77,5 @@ spec:
           done
         fi
 
+        # TODO: For debug purposes - remove when appropriate
         find /workspace -type d
-      env:
-      - name: GH_TOKEN
-        valueFrom:
-          secretKeyRef:
-            name: tip-git-basic-auth
-            key: password
