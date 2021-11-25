@@ -1,0 +1,22 @@
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  name: clone-repos
+spec:
+  taskRef:
+    name: clone-repos
+  params:
+    - name: event-repo-name
+      value: 'petstore'
+    - name: github-user
+      value: 'andreasbradahl-avella'
+  workspaces:
+    - name: source-files
+      volumeClaimTemplate:
+        spec:
+          accessModes: [ "ReadWriteOnce" ]
+          storageClassName: "managed-premium"
+          resources:
+            requests:
+              storage: 1Gi
+  

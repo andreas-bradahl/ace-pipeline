@@ -1,0 +1,85 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: build-artifacts
+spec:
+  workspaces:
+    - name: sources
+  steps:
+    - name: move-projects-to-common-workplace
+      image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
+      workingDir: /workspace/sources
+      script: |
+        #!/bin/bash
+
+        PROJECTS_WORKSPACE="projects_workspace"
+
+        cd common-workspace
+        . ../build-repo/scripts/move_projects_to_common_workspace.sh "../$PROJECTS_WORKSPACE" "projects"
+
+        ls $PROJECTS_WORKSPACE
+
+    # Build the mqsipackagebar commands to be used
+    - name: build-mqsipackagebar-commands
+      image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
+      workingDir: /workspace/sources
+      script: |
+        #!/bin/bash
+
+        # Add only the application folders to the package command
+        touch mqsipackagebar_commands.txt
+
+        jq -cr '.[]' repos_list.json | while read repo; do
+          TIP_NUMBER=${repo::6}
+          TIP_NUMBER=${TIP_NUMBER^^}
+          PACKAGE_COMMAND="mqsipackagebar -a ../bars/${TIP_NUMBER}.bar -k"
+          for dir in projects_workspace/${TIP_NUMBER}*/; do
+              if [[ ${dir^^} == *"LIB/" || ${dir^^} == *"JAVA/" || $(basename ${dir^^}) == "TIP000"* ]]; then
+                  continue
+              else
+                  PACKAGE_COMMAND+=" "$(basename "$dir")
+              fi
+          done
+          echo $PACKAGE_COMMAND >> mqsipackagebar_commands.txt
+        done
+
+        cat mqsipackagebar_commands.txt
+
+    # Build BAR files for each application
+    - name: build-bar-files
+    # TODO: find the correct ACE image to use
+      image: icr.io/appc-dev/ace-server@sha256:980a561ba72fcc53f46e909f9f94c521aa66bf11a3e286480c8074d4e8bb40fe
+      workingDir: /workspace/sources
+      script: |
+        #!/bin/bash
+
+        mkdir -p bars
+
+        cd projects_workspace
+
+        while read -r line; do 
+          $line; 
+        done < ../mqsipackagebar_commands.txt
+
+        find /workspace/sources/bars
+
+    # - name: create-inline-dockerfile
+    #   image: image-registry.openshift-image-registry.svc:5000/openshift/cli
+    #   securityContext:
+    #     privileged: true
+    #     runAsUser: 0
+    #   workingDir: /workspace/sources
+    #   script: |
+    #     #!/bin/sh
+    #     printf "Creating inline Dockerfile...\n"
+    #     cat << 'EOF' > Dockerfile
+    #     FROM ibmcom/ace-server:latest
+    #     ENV LICENSE accept
+    #     RUN mkdir /home/aceuser/bars/
+    #     COPY bars/*.bar /home/aceuser/bars/
+    #     RUN source /opt/ibm/ace-11/server/bin/mqsiprofile \
+    #         && for f in /home/aceuser/bars/*.bar; do mqsibar -a $f -w /home/aceuser/ace-server; done
+    #     EOF
+
+    #     cat Dockerfile
+    #     pwd

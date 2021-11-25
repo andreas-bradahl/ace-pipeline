@@ -6,96 +6,152 @@ spec:
   description: |
     Simple pipeline to demonstrate ACE build on OpenShift
     pipelines.
-  params:
-  - name: repo-url
-    type: string
-    description: The git repository URL to clone from.
-  - name: release-name
-    type: string
-    description: The release name of the application
-  - name: commit-id
-    type: string
-    description: The commit hash identifier for the current HEAD commit
   workspaces:
   - name: shared-data
     description: |
       This workspace will receive the cloned git repo and be passed
       to the next Task for the commit to be checked.
+  params:
+  - name: event-repo-name
+    type: string
+    description: The git repository that was modified to trigger pipeline run
+  - name: github-user
+    type: string
+    description: The organization/user of the GitHub account where the event has happened.
+  # - name: application-name
+  #   type: string
+  #   description: The release name of the application
+  # - name: commit-id
+  #   type: string
+  #   description: The commit hash identifier for the current HEAD commit
   tasks:
-    # Task 1: Clone git repository to workspace
-    - name: fetch-repo
+    # Clone git repository that was modified
+    - name: clone-repos
       taskRef:
-        name: git-clone
-        kind: ClusterTask
+        name: clone-repos
       workspaces:
-      - name: output
+      - name: sources
         workspace: shared-data
       params:
-      - name: url
-        value: $(params.repo-url)
-    # Task 2: Run code level tests, continuous inspection etc.
-    # Task 3: Build ACE image and push to OCP registry
-    - name: build-ace-image
+      - name: event-repo-name
+        value: $(params.event-repo-name)
+      - name: github-user
+        value: $(params.github-user)
+    # Build BAR files and Docker images
+    - name: build-artifacts
       taskRef:
-        name: buildah
-        kind: ClusterTask
+        name: build-artifacts
       runAfter:
-        - fetch-repo
+        - clone-repos
       workspaces:
-        - name: source
-          workspace: shared-data
-      params:
-        - name: IMAGE
-          value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.release-name)-$(params.commit-id)
-        - name: TLSVERIFY
-          value: 'false'
-    # Task 4: Create and deploy IntegrationServer manifest
-    - name: deploy-to-test
-      taskRef:
-        name: create-and-deploy-integration-server
-      runAfter:
-        - build-ace-image
-      params:
-        - name: release-name
-          value: $(params.release-name)-test
-        - name: image-name
-          value: $(params.release-name)
-        - name: namespace
-          value: $(context.pipelineRun.namespace)
-        - name: commit-id
-          value: $(params.commit-id)
-    # Task 5: Run SoapUI tests against deployed route
-    - name: run-e2e-tests
-      taskRef:
-        name: run-e2e-tests
-      runAfter:
-        - deploy-to-test
-      params:
-        - name: release-name
-          value: $(params.release-name)
-      workspaces:
-        - name: source
-          workspace: shared-data
-    # Task 6: Deploy to production environment
-    - name: deploy-to-prod
-      taskRef:
-        name: create-and-deploy-integration-server
-      runAfter:
-        - run-e2e-tests
-      params:
-        - name: release-name
-          value: $(params.release-name)-prod
-        - name: image-name
-          value: $(params.release-name)
-        - name: namespace
-          value: $(context.pipelineRun.namespace)
-        - name: commit-id
-          value: $(params.commit-id)
-  finally:
-    # Task 7: Clean up
-    - name: clean-up
-      taskRef:
-        name: clean-up
-      params:
-        - name: release-name
-          value: $(params.release-name)
+      - name: sources
+        workspace: shared-data
+    # # Inspect file system
+    # - name: inspect
+    #   taskRef:
+    #     name: inspect
+    #   runAfter:
+    #     - store-list-of-dependent-repos
+    #   workspaces:
+    #   - name: source
+    #     workspace: shared-data
+    #   params:
+    #   - name: path
+    #     value: "/workspace"
+    # # Run Python script which fetches and stores list of repos
+    # - name: fetch-and-store-repo-list
+    #   taskRef:
+    #     name: run-python-script
+    #   runAfter:
+    #     - fetch-build-scripts
+    #   workspaces:
+    #   - name: data-location
+    #     workspace: shared-data
+    #   params:
+    #     - name: script-name
+    #       value: $(params.script-name)
+    #     - name: argument-list
+    #       value: $(params.argument-list)
+    # # Git clone all ACE repos
+    # - name: clone-ace-repos
+    #   taskRef:
+    #     name: clone-ace-repos
+    #   runAfter:
+    #     - fetch-and-store-repo-list
+    #   workspaces:
+    #   - name: sources
+    #     workspace: shared-data
+    # # Build BAR files and container image
+    # - name: build-artifacts
+    #   taskRef:
+    #     name: build-artifacts
+    #   runAfter:
+    #     - clone-ace-repos
+    #   workspaces:
+    #   - name: sources
+    #     workspace: shared-data
+    # # Create an inline Dockerfile to create a container image
+    # - name: build-image
+    #   taskRef:
+    #     name: buildah
+    #     kind: ClusterTask
+    #   runAfter:
+    #   - build-artifacts
+    #   workspaces:
+    #   - name: source
+    #     workspace: shared-data
+    #   params:
+    #   - name: IMAGE
+    #     value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.github-tag)-$(params.commit-id)
+    #   - name: TLSVERIFY
+    #     value: 'false'
+  #   # Task 4: Create and deploy IntegrationServer manifest
+  #   - name: deploy-to-test
+  #     taskRef:
+  #       name: create-and-deploy-integration-server
+  #     runAfter:
+  #       - build-ace-image
+  #     params:
+  #       - name: application-name
+  #         value: $(params.application-name)-test
+  #       - name: image-name
+  #         value: $(params.application-name)
+  #       - name: namespace
+  #         value: $(context.pipelineRun.namespace)
+  #       - name: commit-id
+  #         value: $(params.commit-id)
+  #   # Task 5: Run SoapUI tests against deployed route
+  #   - name: run-e2e-tests
+  #     taskRef:
+  #       name: run-e2e-tests
+  #     runAfter:
+  #       - deploy-to-test
+  #     params:
+  #       - name: application-name
+  #         value: $(params.application-name)
+  #     workspaces:
+  #       - name: source
+  #         workspace: shared-data
+  #   # Task 6: Deploy to production environment
+    # - name: deploy-to-prod
+    #   taskRef:
+    #     name: create-and-deploy-integration-server
+    #   runAfter:
+    #     - build-image
+    #   params:
+    #     - name: application-name
+    #       value: $(params.github-tag)-prod
+    #     - name: image-name
+    #       value: $(params.github-tag)
+    #     - name: namespace
+    #       value: $(context.pipelineRun.namespace)
+    #     - name: commit-id
+    #       value: $(params.commit-id)
+  # finally:
+  #   # Task 7: Clean up
+  #   - name: clean-up
+  #     taskRef:
+  #       name: clean-up
+  #     params:
+  #       - name: application-name
+  #         value: $(params.application-name)

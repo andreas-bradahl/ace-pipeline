@@ -1,0 +1,25 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: run-python-script
+spec:
+  params:
+    - name: script-name
+    - name: argument-list
+    - name: subfolder
+  workspaces:
+    - name: data-location
+  steps:
+    - name: run-script
+      image: image-registry.openshift-image-registry.svc:5000/openshift/cli
+      securityContext:
+        privileged: true
+        runAsUser: 0
+      script: |
+        #!/bin/bash
+        python -m pip install requests
+
+        printf "Running script '$(params.script-name)'"
+
+        python /workspace/data-location/$(params.subfolder)/scripts/$(params.script-name).py $(params.argument-list)
+        

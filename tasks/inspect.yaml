@@ -5,6 +5,8 @@ metadata:
 spec:
   workspaces:
     - name: source
+  params:
+    - name: path
   steps:
     - name: find-workspace
       image: ubuntu
@@ -14,4 +16,5 @@ spec:
       - -c
       - |
         set -ex
-        find /workspace
+        find $(params.path)
+        cat /workspace/source/repos/repos.json

@@ -4,7 +4,7 @@ metadata:
   name: run-e2e-tests
 spec:
   params:
-    - name: release-name
+    - name: application-name
   workspaces:
     - name: source
   steps:
@@ -17,4 +17,4 @@ spec:
         curl https://s3.amazonaws.com/downloads.eviware/soapuios/5.6.0/SoapUI-5.6.0-linux-bin.tar.gz --output SoapUI-5.6.0-linux-bin.tar.gz
         tar -xzf SoapUI-5.6.0-linux-bin.tar.gz -C /opt/
         rm /opt/SoapUI-5.6.0/lib/xmlbeans-xmlpublic-2.6.0.jar
-        /opt/SoapUI-5.6.0/bin/testrunner.sh -r /workspace/source/tests/$(params.release-name)-tests-soapui-project.xml
+        /opt/SoapUI-5.6.0/bin/testrunner.sh -r /workspace/source/tests/$(params.application-name)-tests-soapui-project.xml

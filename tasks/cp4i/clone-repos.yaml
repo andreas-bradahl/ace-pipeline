@@ -1,0 +1,61 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: clone-repos
+spec:
+  params:
+    - name: event-repo-name
+    - name: github-user
+  workspaces:
+    - name: sources
+  steps:
+  
+    - name: get-build-repo
+      image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
+      workingDir: /workspace/sources
+      script: |
+        #!/bin/bash
+
+        set -eu
+
+        echo "Event repo name: $(params.event-repo-name)"
+        echo "GitHub user: $(params.github-user)"
+
+        # TODO: build repo needs to be transfered to user:tineikt
+        git clone https://github.com/andreasbradahl-avella/ace-pipelines-build-repo.git build-repo
+
+    - name: get-repos-with-this-topic
+      image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
+      workingDir: /workspace/sources
+      script: |
+        #!/bin/bash
+
+        set -eu
+
+        SCRIPTS_DIR="build-repo/scripts"
+        REPO_LIST="repos_list.json"
+        TOPIC=$(./$SCRIPTS_DIR/get_topic.sh $GH_TOKEN $(params.github-user) $(params.event-repo-name))
+
+        mkdir -p common-workspace
+
+        if [ -z "$TOPIC" ]; then
+          echo "No topic with pod bundle name found for this repo. Cloning event repo only..."
+          git clone -b cicd https://github.com/$(params.github-user)/$(params.event-repo-name).git common-workspace/$(params.event-repo-name)
+        else
+          ./$SCRIPTS_DIR/get_repo_list_for_topic.sh $GH_TOKEN $(params.github-user) $TOPIC $REPO_LIST
+
+          echo "Found $(jq length $REPO_LIST) repos with bundle topic name '$TOPIC'."
+
+          # For each repo in repo list, fetch transitive dependencies
+          jq -cr '.[]' $REPO_LIST | while read repo; do
+            python3 $SCRIPTS_DIR/fetch_dependencies_recursively.py $repo "/workspace/sources/common-workspace"
+          done
+        fi
+
+        find /workspace -type d
+      env:
+      - name: GH_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: tip-git-basic-auth
+            key: password
