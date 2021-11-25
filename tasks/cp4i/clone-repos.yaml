@@ -6,6 +6,9 @@ spec:
   params:
     - name: event-repo-name
     - name: github-user
+    - name: github-branch
+    - name: scripts-dir
+    - name: repo-list
   workspaces:
     - name: sources
   steps:
