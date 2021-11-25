@@ -11,17 +11,18 @@ spec:
   steps:
     - name: get-build-repo
       image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
+      workingDir: /workspace/sources
       script: |
         #!/bin/bash
 
         echo "Event repo name: $(params.event-repo-name)"
         echo "GitHub user: $(params.github-user)"
 
-        echo "Cloning build scripts repo..."
         # TODO: build repo needs to be transfered to user:tineikt
         git clone https://github.com/andreasbradahl-avella/ace-pipelines-build-repo.git build-repo
     - name: get-repos-with-this-topic
       image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
+      workingDir: /workspace/sources
       script: |
         #!/bin/bash
         
@@ -31,8 +32,6 @@ spec:
           -H "Accept: application/vnd.github.v3+json" \
           https://api.github.com/repos/$(params.github-user)/$(params.event-repo-name) | 
           jq -r '.topics[] | select(. | startswith("pod"))')
-
-        echo "Topic found: ${TOPIC}"
 
         if [ -z "$TOPIC" ]
         then
@@ -50,7 +49,7 @@ spec:
           echo "Found $(jq length repos_list.json) repos with bundle topic name $TOPIC."
 
           jq -cr '.[]' repos_list.json | while read repo; do
-              python3 build-repo/scripts/fetch_dependencies_recursively.py $repo
+              python3 build-repo/scripts/fetch_dependencies_recursively.py $repo "/workspace/sources"
           done
         fi
 
