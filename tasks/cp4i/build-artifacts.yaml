@@ -3,6 +3,13 @@ kind: Task
 metadata:
   name: build-artifacts
 spec:
+  params:
+    - name: scripts-dir
+    - name: repo-list
+    - name: commands-file
+      default: "mqsipackagebar_commands.txt"
+    - name: projects-workspace
+      default: "projects_workspace"
   workspaces:
     - name: sources
   steps:
@@ -15,7 +22,7 @@ spec:
         PROJECTS_WORKSPACE="projects_workspace"
 
         cd common-workspace
-        . ../build-repo/scripts/move_projects_to_common_workspace.sh "../$PROJECTS_WORKSPACE" "projects"
+        . ../$(params.scripts-dir)/move_projects_to_common_workspace.sh ../$(params.projects-workspace) projects
 
         ls $PROJECTS_WORKSPACE
 
@@ -26,24 +33,10 @@ spec:
       script: |
         #!/bin/bash
 
-        # Add only the application folders to the package command
-        touch mqsipackagebar_commands.txt
+        # Add only the app (not libs) folders to the package command
+        touch $(params.commands-file)
 
-        jq -cr '.[]' repos_list.json | while read repo; do
-          TIP_NUMBER=${repo::6}
-          TIP_NUMBER=${TIP_NUMBER^^}
-          PACKAGE_COMMAND="mqsipackagebar -a ../bars/${TIP_NUMBER}.bar -k"
-          for dir in projects_workspace/${TIP_NUMBER}*/; do
-              if [[ ${dir^^} == *"LIB/" || ${dir^^} == *"JAVA/" || $(basename ${dir^^}) == "TIP000"* ]]; then
-                  continue
-              else
-                  PACKAGE_COMMAND+=" "$(basename "$dir")
-              fi
-          done
-          echo $PACKAGE_COMMAND >> mqsipackagebar_commands.txt
-        done
-
-        cat mqsipackagebar_commands.txt
+        ./$(params.scripts-dir)/build_mqsipackagebar_commands.sh $(params.repo-list) $(params.projects-workspace) $(params.commands-file)
 
     # Build BAR files for each application
     - name: build-bar-files
@@ -55,12 +48,13 @@ spec:
 
         mkdir -p bars
 
-        cd projects_workspace
+        cd $(params.projects-workspace)
 
-        while read -r line; do 
-          $line; 
-        done < ../mqsipackagebar_commands.txt
+        while IFS= read line; do
+          $line
+        done < ../$(params.commands-file)
 
+        # TODO: For debug purposes - remove when appropriate
         find /workspace/sources/bars
 
     # - name: create-inline-dockerfile

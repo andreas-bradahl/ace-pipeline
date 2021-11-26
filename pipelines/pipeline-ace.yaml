@@ -13,11 +13,13 @@ spec:
       to the next Task for the commit to be checked.
   params:
   - name: event-repo-name
-    type: string
     description: The git repository that was modified to trigger pipeline run
   - name: github-user
-    type: string
     description: The organization/user of the GitHub account where the event has happened.
+  - name: scripts-dir
+    default: "build-repo/scripts"
+  - name: repo-list
+    default: "repo_list.json"
   # - name: application-name
   #   type: string
   #   description: The release name of the application
@@ -37,12 +39,24 @@ spec:
         value: $(params.event-repo-name)
       - name: github-user
         value: $(params.github-user)
-      - name: github-branch
-        value: "cicd"
       - name: scripts-dir
-        value: "build-repo/scripts"
+        value: $(params.scripts-dir)
       - name: repo-list
-        value: "repos_list.json"
+        value: $(params.repo-list)
+    # Build BAR files and Docker images
+    - name: build-artifacts
+      taskRef:
+        name: build-artifacts
+      runAfter:
+        - clone-repos
+      workspaces:
+      - name: sources
+        workspace: shared-data
+      params:
+      - name: scripts-dir
+        value: $(params.scripts-dir)
+      - name: repo-list
+        value: $(params.repo-list)
     # # Inspect file system
     # - name: inspect
     #   taskRef:

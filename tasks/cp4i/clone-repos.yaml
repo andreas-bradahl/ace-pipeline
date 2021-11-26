@@ -7,6 +7,7 @@ spec:
     - name: event-repo-name
     - name: github-user
     - name: github-branch
+      default: "cicd"
     - name: scripts-dir
     - name: repo-list
   workspaces:
