@@ -12,24 +12,20 @@ spec:
       default: "projects_workspace"
   workspaces:
     - name: sources
+  stepTemplate:
+    name: build-artifacts-step-template
+    image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
+    workingDir: /workspace/sources
   steps:
-    - name: move-projects-to-common-workplace
-      image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
-      workingDir: /workspace/sources
+
+    - name: gather-all-project-directories
       script: |
         #!/bin/bash
-
-        PROJECTS_WORKSPACE="projects_workspace"
 
         cd common-workspace
         . ../$(params.scripts-dir)/move_projects_to_common_workspace.sh ../$(params.projects-workspace) projects
 
-        ls $PROJECTS_WORKSPACE
-
-    # Build the mqsipackagebar commands to be used
     - name: build-mqsipackagebar-commands
-      image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
-      workingDir: /workspace/sources
       script: |
         #!/bin/bash
 
@@ -38,13 +34,13 @@ spec:
 
         ./$(params.scripts-dir)/build_mqsipackagebar_commands.sh $(params.repo-list) $(params.projects-workspace) $(params.commands-file)
 
-    # Build BAR files for each application
     - name: build-bar-files
     # TODO: find the correct ACE image to use
       image: icr.io/appc-dev/ace-server@sha256:980a561ba72fcc53f46e909f9f94c521aa66bf11a3e286480c8074d4e8bb40fe
-      workingDir: /workspace/sources
       script: |
         #!/bin/bash
+
+        set -eu
 
         mkdir -p bars
 
