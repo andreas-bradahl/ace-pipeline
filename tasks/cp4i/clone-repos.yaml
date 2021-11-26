@@ -12,11 +12,19 @@ spec:
     - name: repo-list
   workspaces:
     - name: sources
+  stepTemplate:
+    name: clone-repos-step-template
+    image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
+    workingDir: /workspace/sources
+    env:
+      - name: GH_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: tip-git-basic-auth
+            key: password
   steps:
   
     - name: get-build-repo
-      image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
-      workingDir: /workspace/sources
       script: |
         #!/bin/bash
 
@@ -29,14 +37,6 @@ spec:
         git clone https://github.com/andreasbradahl-avella/ace-pipelines-build-repo.git build-repo
 
     - name: get-topic-from-event-repo
-      image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
-      workingDir: /workspace/sources
-      env:
-        - name: GH_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: tip-git-basic-auth
-              key: password
       script: |
         #!/bin/bash
 
@@ -47,14 +47,6 @@ spec:
         echo "Found topic: '$(cat topic.txt)'"
     
     - name: get-repos-with-this-topic
-      image: image-registry.openshift-image-registry.svc:5000/cicd/ubi8-tip
-      workingDir: /workspace/sources
-      env:
-        - name: GH_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: tip-git-basic-auth
-              key: password
       script: |
         #!/bin/bash
 
