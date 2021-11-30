@@ -24,6 +24,9 @@ spec:
 
         cd common-workspace
         . ../$(params.scripts-dir)/move_projects_to_common_workspace.sh ../$(params.projects-workspace) projects
+        
+        # TODO: For debug purposes - remove when appropriate
+        find /workspace/sources
 
     - name: build-mqsipackagebar-commands
       script: |
