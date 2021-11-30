@@ -1,0 +1,28 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: tip-tip111-pr
+spec:
+  serviceAccountName: pipeline
+  pipelineRef:
+    name: pipeline-ace
+  params:
+  - name: event-repo-name
+    value: tip111-ace-m3-kartong-rapportering-service
+  - name: github-branch
+    value: cicd
+  - name: github-user
+    value: tineikt
+  # - name: application-name
+  #   value: 'petstore'
+  # - name: commit-id
+  #   value: 'this1is2a3mocked4commit5id'
+  workspaces:
+    - name: shared-data
+      volumeClaimTemplate:
+        spec:
+          accessModes: [ "ReadWriteOnce" ]
+          storageClassName: "managed-premium"
+          resources:
+            requests:
+              storage: 1Gi
