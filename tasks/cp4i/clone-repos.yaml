@@ -7,7 +7,6 @@ spec:
     - name: event-repo-name
     - name: github-user
     - name: github-branch
-      default: "cicd"
     - name: scripts-dir
     - name: repo-list
   workspaces:
@@ -42,33 +41,33 @@ spec:
 
         set -eu
 
-        echo $(./$(params.scripts-dir)/get_topic.sh $GH_TOKEN $(params.github-user) $(params.event-repo-name)) > topic.txt
+        echo $(./$(params.scripts-dir)/get_topic.sh $GH_TOKEN $(params.github-user) $(params.event-repo-name)) | tee topic.txt
+        TOPIC=$(echo $(cat topic.txt))
 
-        echo "Found topic: '$(cat topic.txt)'"
-    
+  
+        if [ -z "$TOPIC" ]; then
+          echo "No topic with pod bundle name found for this repo. Cloning event repo only..."
+          jq -n --arg repo "$(params.event-repo-name)" '{"repoName":$repo}' > $(params.repo-list)
+        else
+          ./$(params.scripts-dir)/get_repo_list_for_topic.sh $GH_TOKEN $(params.github-user) $TOPIC $(params.repo-list)
+          echo "Found $(jq length $(params.repo-list)) repos with bundle topic name '$TOPIC'."
+        fi
+
+        cat $(params.repo-list)
+
+
     - name: get-repos-with-this-topic
       script: |
         #!/bin/bash
 
         set -eu
 
-        TOPIC=$(echo $(cat topic.txt))
-
         mkdir -p common-workspace
-
-        if [ -z "$TOPIC" ]; then
-          echo "No topic with pod bundle name found for this repo. Cloning event repo only..."
-          git clone -b $(params.github-branch) https://github.com/$(params.github-user)/$(params.event-repo-name).git common-workspace/$(params.event-repo-name)
-        else
-          ./$(params.scripts-dir)/get_repo_list_for_topic.sh $GH_TOKEN $(params.github-user) $TOPIC $(params.repo-list)
-
-          echo "Found $(jq length $(params.repo-list)) repos with bundle topic name '$TOPIC'."
-
-          # For each repo in repo list, fetch transitive dependencies
-          jq -cr '.[]' $(params.repo-list) | while read repo; do
-            python3 $(params.scripts-dir)/fetch_dependencies_recursively.py $repo $(params.github-branch) "/workspace/sources/common-workspace"
-          done
-        fi
+        
+        # For each repo in repo list, fetch transitive dependencies
+        jq -cr '.[]' $(params.repo-list) | while read repo; do
+          python3 $(params.scripts-dir)/fetch_dependencies_recursively.py $repo $(params.github-branch) "/workspace/sources/common-workspace"
+        done
 
         # TODO: For debug purposes - remove when appropriate
         find /workspace -type d
