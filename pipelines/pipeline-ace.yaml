@@ -20,6 +20,8 @@ spec:
     default: "build-repo/scripts"
   - name: repo-list
     default: "repo_list.json"
+  - name: github-branch
+    default: cicd
   # - name: application-name
   #   type: string
   #   description: The release name of the application
@@ -39,6 +41,8 @@ spec:
         value: $(params.event-repo-name)
       - name: github-user
         value: $(params.github-user)
+      - name: github-branch
+        value: $(params.github-branch)
       - name: scripts-dir
         value: $(params.scripts-dir)
       - name: repo-list
