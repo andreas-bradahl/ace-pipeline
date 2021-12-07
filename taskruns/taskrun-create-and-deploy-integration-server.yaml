@@ -1,0 +1,24 @@
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  name: taskrun-create-and-deploy-integration-server
+spec:
+  serviceAccountName: pipeline
+  taskRef:
+    kind: Task
+    name: create-and-deploy-integration-server
+  params:
+    - name: pod-name
+      value: dsp1
+    - name: namespace
+      value: cicd
+  workspaces:
+    - name: source-files
+      volumeClaimTemplate:
+        spec:
+          accessModes: [ "ReadWriteOnce" ]
+          storageClassName: "managed-premium"
+          resources:
+            requests:
+              storage: 1Gi
+  
