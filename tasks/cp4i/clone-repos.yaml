@@ -21,6 +21,9 @@ spec:
           secretKeyRef:
             name: tip-git-basic-auth
             key: password
+  results:
+    - name: pod-name
+      description: The GitHub topic tells which pod an integration belongs to.
   steps:
   
     - name: get-build-repo
@@ -43,12 +46,14 @@ spec:
 
         echo $(./$(params.scripts-dir)/get_topic.sh $GH_TOKEN $(params.github-user) $(params.event-repo-name)) | tee topic.txt
         TOPIC=$(echo $(cat topic.txt))
-
   
         if [ -z "$TOPIC" ]; then
+          POD_NAME=$(params.event-repo-name)
+          echo ${POD_NAME::6} | tee $(results.pod-name.path) # 32 char limit in pod name
           echo "No topic with pod bundle name found for this repo. Cloning event repo only..."
           jq -n --arg repo "$(params.event-repo-name)" '{"repoName":$repo}' > $(params.repo-list)
         else
+          echo $TOPIC | sed 's/pod-//' > $(results.pod-name.path)
           ./$(params.scripts-dir)/get_repo_list_for_topic.sh $GH_TOKEN $(params.github-user) $TOPIC $(params.repo-list)
           echo "Found $(jq length $(params.repo-list)) repos with bundle topic name '$TOPIC'."
         fi

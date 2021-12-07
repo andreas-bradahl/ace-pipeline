@@ -10,6 +10,7 @@ spec:
       default: "mqsipackagebar_commands.txt"
     - name: projects-workspace
       default: "projects_workspace"
+    - name: pod-name
   workspaces:
     - name: sources
   stepTemplate:
@@ -26,7 +27,7 @@ spec:
         . ../$(params.scripts-dir)/move_projects_to_common_workspace.sh ../$(params.projects-workspace) projects
         
         # TODO: For debug purposes - remove when appropriate
-        find /workspace/sources
+        find /workspace/sources/projects_workspace
 
     - name: build-mqsipackagebar-commands
       script: |
@@ -40,6 +41,9 @@ spec:
     - name: build-bar-files
     # TODO: find the correct ACE image to use
       image: icr.io/appc-dev/ace-server@sha256:980a561ba72fcc53f46e909f9f94c521aa66bf11a3e286480c8074d4e8bb40fe
+      securityContext:
+        privileged: true
+        runAsUser: 0
       script: |
         #!/bin/bash
 
@@ -56,23 +60,53 @@ spec:
         # TODO: For debug purposes - remove when appropriate
         find /workspace/sources/bars
 
-    # - name: create-inline-dockerfile
-    #   image: image-registry.openshift-image-registry.svc:5000/openshift/cli
-    #   securityContext:
-    #     privileged: true
-    #     runAsUser: 0
-    #   workingDir: /workspace/sources
-    #   script: |
-    #     #!/bin/sh
-    #     printf "Creating inline Dockerfile...\n"
-    #     cat << 'EOF' > Dockerfile
-    #     FROM ibmcom/ace-server:latest
-    #     ENV LICENSE accept
-    #     RUN mkdir /home/aceuser/bars/
-    #     COPY bars/*.bar /home/aceuser/bars/
-    #     RUN source /opt/ibm/ace-11/server/bin/mqsiprofile \
-    #         && for f in /home/aceuser/bars/*.bar; do mqsibar -a $f -w /home/aceuser/ace-server; done
-    #     EOF
+    - name: create-inline-dockerfile
+      script: |
+        #!/bin/bash
 
-    #     cat Dockerfile
-    #     pwd
+        cat << 'EOF' > Dockerfile
+        FROM icr.io/appc-dev/ace-server@sha256:980a561ba72fcc53f46e909f9f94c521aa66bf11a3e286480c8074d4e8bb40fe
+        ENV LICENSE accept
+        RUN mkdir -p /home/aceuser/initial-config/bars
+        COPY bars/*.bar /home/aceuser/initial-config/bars
+        EOF
+
+        cat Dockerfile
+        
+    - name: build-image
+      image: quay.io/buildah/stable
+      volumeMounts:
+      - name: varlibc
+        mountPath: /var/lib/containers
+      securityContext:
+        privileged: true
+        runAsUser: 0
+      script: |
+        #!/bin/bash
+
+        buildah \
+        bud \
+        --tls-verify=false \
+        --layers \
+        -f ./Dockerfile \
+        -t image-registry.openshift-image-registry.svc:5000/cicd/$(params.pod-name) 
+
+    - name: push-image
+      image: quay.io/buildah/stable
+      volumeMounts:
+      - name: varlibc
+        mountPath: /var/lib/containers
+      securityContext:
+        privileged: true
+        runAsUser: 0
+      script: |
+        #!/bin/bash
+
+        buildah \
+        push \
+        --tls-verify=false \
+        image-registry.openshift-image-registry.svc:5000/cicd/$(params.pod-name) 
+
+  volumes:
+    - name: varlibc
+      emptyDir: {}
