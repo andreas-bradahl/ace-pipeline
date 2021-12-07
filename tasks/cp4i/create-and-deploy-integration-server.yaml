@@ -4,23 +4,21 @@ metadata:
   name: create-and-deploy-integration-server
 spec:
   params:
-    - name: application-name
-    - name: image-name
+    - name: pod-name
     - name: namespace
-    - name: commit-id
   steps:
+
     - name: create-is-manifest
-      image: image-registry.openshift-image-registry.svc:5000/openshift/cli
+      image: image-registry.openshift-image-registry.svc:5000/cicd/origin-cli
       script: |
         printf "Creating IntegrationServer manifest"
         cat << EOF > integrationserver.yaml
         apiVersion: appconnect.ibm.com/v1beta1
         kind: IntegrationServer
         metadata:
-          name: $(params.application-name)
+          name: $(params.pod-name)
           labels:
-            topic: $(params.application-name)
-            commitId: $(params.commit-id)
+            pod: $(params.pod-name)
           namespace: $(params.namespace)
         spec:
           license:
@@ -30,7 +28,7 @@ spec:
           pod:
             containers:
               runtime:
-                image: image-registry.openshift-image-registry.svc:5000/$(params.namespace)/$(params.image-name)-$(params.commit-id)
+                image: image-registry.openshift-image-registry.svc:5000/$(params.namespace)/$(params.pod-name)
                 imagePullPolicy: Always
                 resources:
                   limits:
@@ -49,28 +47,40 @@ spec:
           replicas: 1
           barURL: ''
         EOF
+
+        cat integrationserver.yaml
+
     - name: deploy-is-manifest
-      image: image-registry.openshift-image-registry.svc:5000/openshift/cli
+      image: image-registry.openshift-image-registry.svc:5000/cicd/origin-cli
       script: |
         printf "Applying IntegrationServer manifest to OpenShift cluster"
         oc apply -f integrationserver.yaml
+
     - name: wait-for-pod-readiness
-      image: image-registry.openshift-image-registry.svc:5000/openshift/cli
+      image: image-registry.openshift-image-registry.svc:5000/cicd/origin-cli
       script: |
         #!/bin/bash
         
         printf "Waiting for deployment to be created\n."
 
-        timeout 10m bash -c 'until oc get deployment.apps/$(params.application-name)-is &> /dev/null
-        do
-          printf "." 
-          sleep 2
-        done'
+        POD_NAME=$(params.pod-name)
+        SUFFIX='-is'
+        echo "looking for pod with name: ${POD_NAME}${SUFFIX}"
 
-        if [[ $(oc get deployment.apps/$(params.application-name)-is) ]]
+        timeout 10m bash -c "until oc get deployment.apps/${POD_NAME}${SUFFIX} &> /dev/null
+        do
+          echo . 
+          sleep 2
+        done"
+
+        echo "Until loop done"
+
+        if [[ $(oc get deployment.apps/${POD_NAME}${SUFFIX}) ]]
         then
           printf "\nDeployment found.\n"
           printf "Waiting for deployment condition=Available.\n"
           # Waits until pod is ready for traffic
-          oc wait --for=condition=Available deployment/$(params.application-name)-is --timeout=90s
+          oc wait --for=condition=Available deployment/${POD_NAME}${SUFFIX} --timeout=90s
+        else
+          exit 1
         fi
