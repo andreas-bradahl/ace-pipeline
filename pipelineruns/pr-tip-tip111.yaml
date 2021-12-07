@@ -13,10 +13,6 @@ spec:
     value: cicd
   - name: github-user
     value: tineikt
-  # - name: application-name
-  #   value: 'petstore'
-  # - name: commit-id
-  #   value: 'this1is2a3mocked4commit5id'
   workspaces:
     - name: shared-data
       volumeClaimTemplate:
