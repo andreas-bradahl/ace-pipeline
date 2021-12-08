@@ -29,6 +29,7 @@ spec:
   #   type: string
   #   description: The commit hash identifier for the current HEAD commit
   tasks:
+  
     # Clone git repository that was modified
     - name: clone-repos
       taskRef:
@@ -47,6 +48,7 @@ spec:
         value: $(params.scripts-dir)
       - name: repo-list
         value: $(params.repo-list)
+
     # Build BAR files and Docker images
     - name: build-artifacts
       taskRef:
