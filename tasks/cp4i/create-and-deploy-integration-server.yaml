@@ -11,7 +11,7 @@ spec:
     - name: create-is-manifest
       image: image-registry.openshift-image-registry.svc:5000/cicd/origin-cli
       script: |
-        printf "Creating IntegrationServer manifest"
+        echo "Creating IntegrationServer manifest"
         cat << EOF > integrationserver.yaml
         apiVersion: appconnect.ibm.com/v1beta1
         kind: IntegrationServer
@@ -53,7 +53,7 @@ spec:
     - name: deploy-is-manifest
       image: image-registry.openshift-image-registry.svc:5000/cicd/origin-cli
       script: |
-        printf "Applying IntegrationServer manifest to OpenShift cluster"
+        echo "Applying IntegrationServer manifest to OpenShift cluster"
         oc apply -f integrationserver.yaml
 
     - name: wait-for-pod-readiness
@@ -61,11 +61,11 @@ spec:
       script: |
         #!/bin/bash
         
-        printf "Waiting for deployment to be created\n."
+        echo "Waiting for deployment to be created"
 
         POD_NAME=$(params.pod-name)
         SUFFIX='-is'
-        echo "looking for pod with name: ${POD_NAME}${SUFFIX}"
+        echo "Looking for deployment with name ${POD_NAME}${SUFFIX}"
 
         timeout 10m bash -c "until oc get deployment.apps/${POD_NAME}${SUFFIX} &> /dev/null
         do
@@ -73,14 +73,13 @@ spec:
           sleep 2
         done"
 
-        echo "Until loop done"
-
         if [[ $(oc get deployment.apps/${POD_NAME}${SUFFIX}) ]]
         then
-          printf "\nDeployment found.\n"
-          printf "Waiting for deployment condition=Available.\n"
+          echo "Deployment ${POD_NAME}${SUFFIX} found."
+          echo "Waiting for deployment condition=Available."
           # Waits until pod is ready for traffic
           oc wait --for=condition=Available deployment/${POD_NAME}${SUFFIX} --timeout=90s
         else
+          echo "Deployment ${POD_NAME}${SUFFIX} not found. Exiting..."
           exit 1
         fi
