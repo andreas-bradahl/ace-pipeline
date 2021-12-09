@@ -60,6 +60,31 @@ spec:
         # TODO: For debug purposes - remove when appropriate
         find /workspace/sources/bars
 
+    - name: apply-qa-overrides
+    # TODO: find the correct ACE image to use
+      image: icr.io/appc-dev/ace-server@sha256:980a561ba72fcc53f46e909f9f94c521aa66bf11a3e286480c8074d4e8bb40fe
+      securityContext:
+        privileged: true
+        runAsUser: 0
+      script: |
+        #!/bin/bash
+
+        set -eu
+
+        # For each BAR file, apply BAR override
+        for bar in bars/*.bar; do
+          REPO_NAME=$(basename "${bar%.*}")
+          PROPERTIES_FILE="common-workspace/${REPO_NAME}/config/qa/overrides/${REPO_NAME}.qa.properties"
+
+          echo "BAR file: $bar"
+          echo "Repo name: $REPO_NAME"
+          echo "Properties file: $PROPERTIES_FILE"
+
+          mqsiapplybaroverride -b "$bar" -p "$PROPERTIES_FILE" -r
+
+        done
+
+
     - name: create-inline-dockerfile
       script: |
         #!/bin/bash
