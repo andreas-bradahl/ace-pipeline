@@ -1,0 +1,24 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: tip-tip015-pr
+spec:
+  serviceAccountName: pipeline
+  pipelineRef:
+    name: pipeline-ace
+  params:
+  - name: event-repo-name
+    value: tip015-ace-m3-powerapps-java
+  - name: github-branch
+    value: cicd
+  - name: github-user
+    value: tineikt
+  workspaces:
+    - name: shared-data
+      volumeClaimTemplate:
+        spec:
+          accessModes: [ "ReadWriteOnce" ]
+          storageClassName: "managed-premium"
+          resources:
+            requests:
+              storage: 1Gi
