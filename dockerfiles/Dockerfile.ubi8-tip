@@ -1,0 +1,8 @@
+FROM registry.access.redhat.com/ubi8/ubi:8.5-200
+
+RUN yum -y install \
+    jq \
+    git \
+    python39 \
+    && yum -y clean all && rm -rf /var/cache \
+    && pip3 install pyyaml
