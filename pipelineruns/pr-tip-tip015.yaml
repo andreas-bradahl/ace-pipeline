@@ -13,6 +13,8 @@ spec:
     value: cicd
   - name: github-user
     value: tineikt
+  - name: commit-id
+    value: d189ad2
   workspaces:
     - name: shared-data
       volumeClaimTemplate:

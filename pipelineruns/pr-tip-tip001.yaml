@@ -1,20 +1,20 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  generateName: tip-dsp-pr
+  generateName: tip-tip001-pr
 spec:
   serviceAccountName: pipeline
   pipelineRef:
     name: pipeline-ace
   params:
   - name: event-repo-name
-    value: tip004-ace-assortements-rest
+    value: tip001-ace-lervig-java
   - name: github-user
     value: tineikt
   - name: github-branch
     value: cicd
   - name: commit-id
-    value: ab0f789
+    value: 4327edc
   workspaces:
     - name: shared-data
       volumeClaimTemplate:

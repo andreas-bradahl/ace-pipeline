@@ -1,20 +1,20 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  generateName: tip-dsp-pr
+  generateName: tip-tip046-pr
 spec:
   serviceAccountName: pipeline
   pipelineRef:
     name: pipeline-ace
   params:
   - name: event-repo-name
-    value: tip004-ace-assortements-rest
-  - name: github-user
-    value: tineikt
+    value: tip046-ace-ad-riversand-employee-copro-service
   - name: github-branch
     value: cicd
+  - name: github-user
+    value: tineikt
   - name: commit-id
-    value: ab0f789
+    value: 20c3172
   workspaces:
     - name: shared-data
       volumeClaimTemplate:
