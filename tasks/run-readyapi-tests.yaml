@@ -16,7 +16,7 @@ spec:
         - name: LICENSE_SERVER
           value: "app100rapi001.tine.no:443"
         - name: COMMAND_LINE
-          value: "common-workspace/tip046-ace-ad-riversand-employee-copro-service/tests/readyapi/tip046-ace-ad-riversand-employee-copro-service-tests-readyapi-project.xml"
+          value: "/project/tip046-ace-ad-riversand-employee-copro-service-tests-readyapi-project.xml"
       script: |
         pwd
         echo "Running tests"
