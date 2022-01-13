@@ -10,7 +10,7 @@ spec:
     - name: run-test-suite
       image: image-registry.openshift-image-registry.svc:5000/cicd/ready-api-soapui-testrunner:3.20.0
       volumeMounts:
-        - name: test-project
+        - name: readyapi-project
           mountPath: /project
       env:
         - name: LICENSE_SERVER
@@ -22,6 +22,6 @@ spec:
         echo "Running tests"
       
   volumes:
-    - name: test-project
+    - name: readyapi-project
       hostPath:
         path: common-workspace/tip046-ace-ad-riversand-employee-copro-service/tests/readyapi
