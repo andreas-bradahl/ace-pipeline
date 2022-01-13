@@ -1,0 +1,30 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: run-readyapi-tests
+spec:
+  workspaces:
+    - name: source
+  steps:
+
+    - name: run-test-suite
+      image: image-registry.openshift-image-registry.svc:5000/cicd/ready-api-soapui-testrunner:3.20.0
+      # volumeMounts:
+      #   - name: test-project
+      #     mountPath: /project
+      env:
+        - name: LICENSE_SERVER
+          value: "app100rapi001.tine.no:443"
+        - name: COMMAND_LINE
+          value: "common-workspace/tip046-ace-ad-riversand-employee-copro-service/tests/readyapi/tip046-ace-ad-riversand-employee-copro-service-tests-readyapi-project.xml"
+      script: |
+        pwd
+        echo "Running tests"
+      
+  # volumes:
+  #   - name: test-project
+  #     hostPath:
+  #       path: common-workspace/tip046-ace-ad-riversand-employee-copro-service/tests/readyapi
+  # volumes:
+  #   - name: test-project
+  #     emptyDir: {}
